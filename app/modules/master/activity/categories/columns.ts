@@ -1,0 +1,70 @@
+import type { ColumnDef } from "@tanstack/vue-table"
+import { h } from "vue"
+import { Checkbox } from "@/components/ui/checkbox"
+import DataTableColumnHeader from '@/components/data-table/DataTableColumnHeader.vue'
+import DataTableRowActions from './components/DataTableRowActions.vue'
+
+export type CategoriesRow = {
+  id: number
+  code: string
+  name: string | null
+}
+
+type ColumnActions = {
+  onEdit: (row: CategoriesRow) => void
+  onDelete: (row: CategoriesRow) => void
+}
+type CheckState = boolean | "indeterminate"
+export function getCategoriesColumns(actions: ColumnActions): ColumnDef<CategoriesRow>[] {
+  return [
+    {
+      id: "select",
+      header: ({ table }) =>
+        h(Checkbox, {
+          modelValue: table.getIsAllPageRowsSelected(),
+          "onUpdate:modelValue": (v: CheckState) =>
+            table.toggleAllPageRowsSelected(v === true),
+          indeterminate: table.getIsSomePageRowsSelected(),
+          onClick: (e: MouseEvent) => e.stopPropagation(),
+          "aria-label": "Select all",
+        }),
+
+      cell: ({ row }) =>
+        h(Checkbox, {
+          modelValue: row.getIsSelected(),
+          "onUpdate:modelValue": (v: CheckState) =>
+            row.toggleSelected(v === true),
+          onClick: (e: MouseEvent) => e.stopPropagation(),
+          "aria-label": "Select row",
+        }),
+
+      enableSorting: false,
+      enableHiding: false,
+      size: 40,
+    },
+    {
+      accessorKey: 'code',
+      header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Code' }),
+      enableSorting: true,
+      cell: ({ row }) => h('div', { class: 'font-medium' }, row.original.code),
+    },
+    {
+      accessorKey: 'name',
+      header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Name' }),
+      enableSorting: true,
+      cell: ({ row }) => h('div', { class: 'text-muted-foreground' }, row.original.name ?? '-'),
+    },
+    {
+      id: 'actions',
+      header: () => h('div', { class: 'text-right' }, 'Actions'),
+      cell: ({ row }) =>
+        h('div', { class: 'flex justify-end' }, [
+          h(DataTableRowActions, {
+            row: row.original,
+            onEdit: actions.onEdit,
+            onDelete: actions.onDelete,
+          }),
+        ]),
+    }
+  ]
+}

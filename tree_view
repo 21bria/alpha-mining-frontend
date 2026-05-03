@@ -1,0 +1,311 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue"
+import type { TreeItem } from "@nuxt/ui"
+import { useApi } from "@/composables/useApi"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+
+const { request } = useApi()
+
+/**
+ * API:
+ * [
+ *   { app: "accounts", models: [ { model: "user", perms: [ {id, code, name, codename} ] } ] }
+ * ]
+ */
+type PermItem = { id: number; code: string; name: string; codename: string }
+type PermModel = { model: string; perms: PermItem[] }
+type PermApp = { app: string; models: PermModel[] }
+
+const loading = ref(false)
+const apiError = ref<string | null>(null)
+const search = ref("")
+
+// selected permissions (ID)
+const selectedIds = ref<number[]>([])
+const permApps = ref<PermApp[]>([])
+
+/** label helpers */
+function titleize(s: string) {
+  return s
+    .replaceAll("_", " ")
+    .replaceAll("-", " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/** selection helpers */
+function isChecked(id: number) {
+  return selectedIds.value.includes(id)
+}
+function toggleId(id: number) {
+  const set = new Set(selectedIds.value)
+  set.has(id) ? set.delete(id) : set.add(id)
+  selectedIds.value = Array.from(set)
+}
+function selectAll(ids: number[]) {
+  const set = new Set(selectedIds.value)
+  ids.forEach((id) => set.add(id))
+  selectedIds.value = Array.from(set)
+}
+function clearAll(ids: number[]) {
+  const set = new Set(selectedIds.value)
+  ids.forEach((id) => set.delete(id))
+  selectedIds.value = Array.from(set)
+}
+
+/** tri-state state for parent checkbox */
+function nodeState(ids: number[] | undefined) {
+  const arr = ids ?? []
+  if (!arr.length) return { checked: false, indeterminate: false }
+
+  let hit = 0
+  for (const id of arr) if (isChecked(id)) hit++
+
+  if (hit === 0) return { checked: false, indeterminate: false }
+  if (hit === arr.length) return { checked: true, indeterminate: false }
+  return { checked: false, indeterminate: true }
+}
+
+/** Tree node */
+type PermNodeType = "app" | "model" | "perm"
+type PermNode = TreeItem & {
+  _type: PermNodeType
+  _ids?: number[] // all perm ids under node (full, not filtered)
+  _permId?: number
+  _permCode?: string
+  _permName?: string
+  _level?: number // << important for indent
+}
+
+/** Add _level recursively (so indent always works, no dependence on UTree slot props) */
+function withLevel(nodes: PermNode[], level = 0): PermNode[] {
+  return nodes.map((n) => ({
+    ...n,
+    _level: level,
+    children: n.children ? withLevel(n.children as PermNode[], level + 1) : undefined,
+  }))
+}
+
+/** Expand everything when searching (optional behavior) */
+function withDefaultExpandedOnSearch(nodes: PermNode[], q: string): PermNode[] {
+  if (!q) return nodes
+  return nodes.map((n) => ({
+    ...n,
+    defaultExpanded: n._type !== "perm", // expand app/model
+    children: n.children ? withDefaultExpandedOnSearch(n.children as PermNode[], q) : undefined,
+  }))
+}
+
+/** Build TreeItem[] for UTree */
+const items = computed<PermNode[]>(() => {
+  const q = search.value.trim().toLowerCase()
+
+  const appNodes: PermNode[] = permApps.value
+    .map((app) => {
+      const modelNodes: PermNode[] = app.models
+        .map((m) => {
+          // filter leaf only (while search)
+          const filteredPerms = m.perms.filter((p) => {
+            if (!q) return true
+            return (
+              p.code.toLowerCase().includes(q) ||
+              p.name.toLowerCase().includes(q) ||
+              p.codename.toLowerCase().includes(q)
+            )
+          })
+
+          const permNodes: PermNode[] = filteredPerms.map((p) => ({
+            label: p.code,
+            _type: "perm",
+            _permId: p.id,
+            _permCode: p.code,
+            _permName: p.name,
+          }))
+
+          // hide empty model during search
+          if (q && permNodes.length === 0) return null as any
+
+          return {
+            label: titleize(m.model),
+            children: permNodes,
+            _type: "model",
+            _ids: m.perms.map((p) => p.id), // full IDs for tri-state/select-all
+          } as PermNode
+        })
+        .filter(Boolean) as PermNode[]
+
+      // hide empty app during search
+      if (q && modelNodes.length === 0) return null as any
+
+      const allIds = app.models.flatMap((m) => m.perms.map((p) => p.id))
+
+      return {
+        label: titleize(app.app),
+        children: modelNodes,
+        _type: "app",
+        _ids: allIds,
+      } as PermNode
+    })
+    .filter(Boolean) as PermNode[]
+
+  // apply expand-on-search + add stable levels
+  const expanded = withDefaultExpandedOnSearch(appNodes, q)
+  return withLevel(expanded, 0)
+})
+
+/** fetch */
+async function loadPermissionTree() {
+  loading.value = true
+  apiError.value = null
+  try {
+    const res = await request<PermApp[]>("/api/auth/permissions/tree/", { method: "GET" })
+    permApps.value = res ?? []
+  } catch (e: any) {
+    apiError.value = e?.data?.detail ?? e?.message ?? "Failed to load permissions"
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadPermissionTree)
+
+const selectedCount = computed(() => selectedIds.value.length)
+</script>
+
+<template>
+  <div class="space-y-4">
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h3 class="text-lg font-semibold">Permissions</h3>
+        <p class="text-sm text-muted-foreground">
+          Select permissions (e.g. <span class="font-mono">accounts.view_user</span>) to control menu + actions.
+        </p>
+      </div>
+
+      <div class="text-sm text-muted-foreground">
+        Selected: <span class="font-medium">{{ selectedCount }}</span>
+      </div>
+    </div>
+
+    <!-- Search + reload -->
+    <div class="flex items-center gap-2">
+      <Input v-model="search" placeholder="Search permission code / name..." class="max-w-md" />
+      <Button variant="outline" :disabled="loading" @click="loadPermissionTree">
+        {{ loading ? "Loading..." : "Reload" }}
+      </Button>
+    </div>
+
+    <p v-if="apiError" class="text-sm text-destructive">{{ apiError }}</p>
+
+    <!-- Tree panel -->
+    <div class="rounded-2xl border bg-background p-4">
+      <UTree :items="items" class="permission-tree">
+        <!--
+          NOTE:
+          Kita tidak pakai depth dari slot.
+          Indent pasti pakai item._level.
+        -->
+        <template #item="{ item, toggle, isExpanded }">
+          <div class="w-full" :style="{ paddingLeft: `${(item._level ?? 0) * 22}px` }">
+            <div
+              class="flex items-center justify-between gap-3 rounded-xl px-3 py-2
+                     bg-muted/60 hover:bg-muted transition"
+            >
+              <!-- Left -->
+              <div class="flex items-center gap-2 min-w-0">
+                <!-- Parent checkbox tri-state -->
+                <template v-if="item._type !== 'perm'">
+                  <Checkbox
+                    :model-value="nodeState(item._ids).checked"
+                    :indeterminate="nodeState(item._ids).indeterminate"
+                    @update:model-value="(v) => (v ? selectAll(item._ids || []) : clearAll(item._ids || []))"
+                    @click.stop
+                  />
+                  <UIcon name="i-lucide-folder" class="h-5 w-5 text-emerald-600" />
+                </template>
+
+                <!-- Leaf checkbox -->
+                <template v-else>
+                  <Checkbox
+                    :model-value="isChecked(item._permId!)"
+                    @update:model-value="() => toggleId(item._permId!)"
+                    @click.stop
+                  />
+                  <UIcon name="i-lucide-file" class="h-5 w-5 text-emerald-600" />
+                </template>
+
+                <!-- Text -->
+                <div class="min-w-0">
+                  <!-- perm -->
+                  <div v-if="item._type === 'perm'">
+                    <div class="font-mono text-sm truncate">{{ item._permCode }}</div>
+                    <div class="text-xs text-muted-foreground truncate">{{ item._permName }}</div>
+                  </div>
+
+                  <!-- app / model -->
+                  <div v-else class="flex items-center gap-2 min-w-0">
+                    <div class="text-sm font-semibold truncate">{{ item.label }}</div>
+                    <span v-if="item._type === 'model'" class="text-xs text-muted-foreground">
+                      ({{ item.children?.length ?? 0 }})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right -->
+              <div class="flex items-center gap-2 shrink-0" @click.stop>
+                <!-- OPTIONAL buttons (hapus kalau mau lebih mirip file-tree) -->
+                <template v-if="item._type !== 'perm' && item._ids?.length">
+                  <Button size="sm" variant="outline" class="h-7 px-2" @click="selectAll(item._ids)">
+                    Select all
+                  </Button>
+                  <Button size="sm" variant="outline" class="h-7 px-2" @click="clearAll(item._ids)">
+                    Clear
+                  </Button>
+                </template>
+
+                <!-- Caret: only if has children -->
+                <button
+                  v-if="item.children?.length"
+                  type="button"
+                  class="rounded-lg p-1 hover:bg-background/70 transition"
+                  @click.stop="toggle?.(item)"
+                  aria-label="Toggle"
+                >
+                  <UIcon
+                    name="i-heroicons-chevron-right-20-solid"
+                    class="h-5 w-5 text-emerald-600 transition-transform"
+                    :class="isExpanded ? 'rotate-90' : 'rotate-0'"
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </UTree>
+    </div>
+
+    <!-- Debug -->
+    <div class="rounded-2xl border p-4">
+      <div class="text-sm font-medium mb-2">Selected Permission IDs</div>
+      <div class="text-xs text-muted-foreground break-words">{{ selectedIds }}</div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Jangan pakai display:grid untuk ul kalau mau tree feel (indent keliatan natural) */
+.permission-tree :deep(ul) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 0;
+  margin: 0;
+}
+.permission-tree :deep(li) {
+  list-style: none;
+  margin: 0;
+}
+</style>

@@ -1,0 +1,36 @@
+tooltip: {
+    theme: isDark.value ? 'dark' : 'light',
+
+    custom: function ({ dataPointIndex }: any) {
+      const d = props.details?.[dataPointIndex]
+      if (!d) return ''
+
+      return `
+      <div style="
+        padding:10px 12px;
+        min-width:180px;
+        font-size:12px;
+        color:${isDark.value ? '#eee' : '#222'};
+      ">
+        <div style="font-weight:700;margin-bottom:6px;">
+          ${d.label}
+        </div>
+
+        <div>Productivity: <strong>${fmtNumber(d.productivity)} t/h</strong></div>
+        <div>Fleet: <strong>${d.fleet}</strong></div>
+        <div>Total Ore: <strong>${fmtNumber(d.total_ore)}</strong></div>
+        <div>Hours: <strong>${fmtNumber(d.working_hours)} h</strong></div>
+
+        <div style="
+          margin-top:6px;
+          border-top:1px solid ${isDark.value ? '#334155' : '#e5e7eb'};
+          padding-top:6px;
+          font-size:11px;
+          opacity:.7;
+        ">
+          Click for detail →
+        </div>
+      </div>
+      `
+      }
+    },

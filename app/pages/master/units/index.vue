@@ -1,0 +1,15 @@
+<script setup lang="ts">
+definePageMeta({ requiresSystem: true })
+</script>
+
+<template>
+    <div />
+</template>
+
+<script lang="ts">
+export default {
+    mounted() {
+        navigateTo("/master/units/list")
+    }
+}
+</script>
