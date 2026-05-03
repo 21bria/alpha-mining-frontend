@@ -48,22 +48,22 @@ export function useApi() {
   // }
 
   const buildUrl = (path: string, query?: Record<string, any>) => {
-  const qs = new URLSearchParams(
-    Object.entries(cleanQuery(query)).reduce((acc, [key, value]) => {
-      acc[key] = String(value)
-      return acc
-    }, {} as Record<string, string>)
-  ).toString()
+    const qs = new URLSearchParams(
+      Object.entries(cleanQuery(query)).reduce((acc, [key, value]) => {
+        acc[key] = String(value)
+        return acc
+      }, {} as Record<string, string>)
+    ).toString()
 
-  const normalizedBase = String(baseURL || "").replace(/\/$/, "")
+    const normalizedBase = String(baseURL || "").replace(/\/$/, "")
 
-  // FIX double /api
-  const cleanPath = path.replace(/^\/?api\//, "/")
+    // FIX double /api
+    const cleanPath = path.replace(/^\/?api\//, "/")
 
-  const normalizedPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`
+    const normalizedPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`
 
-  return `${normalizedBase}${normalizedPath}${qs ? `?${qs}` : ""}`
-}
+    return `${normalizedBase}${normalizedPath}${qs ? `?${qs}` : ""}`
+  }
 
   const request = async <T = any>(path: string, opts: RequestOpts = {}): Promise<T> => {
     if (import.meta.client && !auth.access && !auth.refresh) {
