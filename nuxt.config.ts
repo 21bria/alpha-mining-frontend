@@ -2,7 +2,10 @@ import tailwindcss from '@tailwindcss/vite'
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: true,
-  devtools: { enabled: true },
+  // devtools: { enabled: true },
+  devtools: {
+    enabled: import.meta.dev,
+  },
   css: ['@/assets/css/tailwind.css'],
   vite: {
     plugins: [

@@ -9,39 +9,6 @@
 //   headers?: Record<string, string>
 // }
 
-// export function useApi() {
-//   const config = useRuntimeConfig()
-//   const baseURL = config.public.apiBaseUrl
-//   const auth = useAuthStore()
-
-//   const request = async <T = any>(path: string, opts: RequestOpts = {}): Promise<T> => {
-//     if (import.meta.client && !auth.access && !auth.refresh) auth.loadFromStorage()
-
-//     const doFetch = (accessToken?: string) => {
-//       return $fetch<T>(`${baseURL}${path}`, {
-//         method: (opts.method ?? 'GET'),
-//         query: opts.query,
-//         body: opts.body,
-//         headers: {
-//           ...(opts.headers ?? {}),
-//           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-//         },
-//       })
-//     }
-
-//     try {
-//       return await doFetch(auth.access)
-//     } catch (e: any) {
-//       if (e?.response?.status === 401 && auth.refresh) {
-//         const newAccess = await auth.refreshToken()
-//         return await doFetch(newAccess)
-//       }
-//       throw e
-//     }
-//   }
-
-//   return { request }
-// }
 
 type HttpMethod =
   | "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -66,19 +33,37 @@ export function useApi() {
     )
   }
 
+  // const buildUrl = (path: string, query?: Record<string, any>) => {
+  //   const qs = new URLSearchParams(
+  //     Object.entries(cleanQuery(query)).reduce((acc, [key, value]) => {
+  //       acc[key] = String(value)
+  //       return acc
+  //     }, {} as Record<string, string>)
+  //   ).toString()
+
+  //   const normalizedBase = String(baseURL || "").replace(/\/$/, "")
+  //   const normalizedPath = path.startsWith("/") ? path : `/${path}`
+
+  //   return `${normalizedBase}${normalizedPath}${qs ? `?${qs}` : ""}`
+  // }
+
   const buildUrl = (path: string, query?: Record<string, any>) => {
-    const qs = new URLSearchParams(
-      Object.entries(cleanQuery(query)).reduce((acc, [key, value]) => {
-        acc[key] = String(value)
-        return acc
-      }, {} as Record<string, string>)
-    ).toString()
+  const qs = new URLSearchParams(
+    Object.entries(cleanQuery(query)).reduce((acc, [key, value]) => {
+      acc[key] = String(value)
+      return acc
+    }, {} as Record<string, string>)
+  ).toString()
 
-    const normalizedBase = String(baseURL || "").replace(/\/$/, "")
-    const normalizedPath = path.startsWith("/") ? path : `/${path}`
+  const normalizedBase = String(baseURL || "").replace(/\/$/, "")
 
-    return `${normalizedBase}${normalizedPath}${qs ? `?${qs}` : ""}`
-  }
+  // FIX double /api
+  const cleanPath = path.replace(/^\/?api\//, "/")
+
+  const normalizedPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`
+
+  return `${normalizedBase}${normalizedPath}${qs ? `?${qs}` : ""}`
+}
 
   const request = async <T = any>(path: string, opts: RequestOpts = {}): Promise<T> => {
     if (import.meta.client && !auth.access && !auth.refresh) {
