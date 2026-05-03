@@ -57,8 +57,15 @@ export function useApi() {
 
     const normalizedBase = String(baseURL || "").replace(/\/$/, "")
 
-    // FIX double /api
-    const cleanPath = path.replace(/^\/?api\//, "/")
+    const baseHasApi = normalizedBase.endsWith("/api")
+    const pathHasApi = /^\/?api\//.test(path)
+
+    let cleanPath = path
+
+    // Kalau baseURL sudah /api, hapus /api dari path supaya tidak jadi /api/api
+    if (baseHasApi && pathHasApi) {
+      cleanPath = path.replace(/^\/?api\//, "/")
+    }
 
     const normalizedPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`
 
