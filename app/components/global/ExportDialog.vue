@@ -292,10 +292,12 @@ const dateRangeState = computed(() => {
 function normalizeDownloadUrl(url: string) {
   if (!url) return ""
 
-  // kalau sudah full URL → pakai saja
-  if (url.startsWith("http")) return url
+  if (url.startsWith("http://")) {
+    return url.replace("http://", "https://")
+  }
 
-  // kalau relatif → ikut origin sekarang
+  if (url.startsWith("https://")) return url
+
   return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`
 }
 
@@ -576,19 +578,19 @@ async function exportData() {
                 Close
               </Button>
 
-              <!-- <Button as-child class="shrink-0">
+              <Button as-child class="shrink-0">
                 <a :href="downloadUrl" target="_blank" rel="noopener noreferrer">
                   <Icon name="i-lucide-download" class="mr-2 h-4 w-4" />
                   Download File
                 </a>
-              </Button> -->
-              <Button as-child class="shrink-0">
+              </Button>
+              <!-- <Button as-child class="shrink-0">
                 <a :href="downloadUrl" :download="props.fileName ?? 'export.xlsx'" target="_blank"
                   rel="noopener noreferrer">
                   <Icon name="i-lucide-download" class="mr-2 h-4 w-4" />
                   Download File
                 </a>
-              </Button>
+              </Button> -->
             </div>
           </div>
 
