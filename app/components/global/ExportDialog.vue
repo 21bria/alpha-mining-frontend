@@ -21,37 +21,37 @@ const { request } = useApi()
 
 type FilterSchema =
   | {
-      kind: "text"
-      key: string
-      label: string
-      placeholder?: string
-    }
+    kind: "text"
+    key: string
+    label: string
+    placeholder?: string
+  }
   | {
-      kind: "date"
-      key: string
-      label: string
-    }
+    kind: "date"
+    key: string
+    label: string
+  }
   | {
-      kind: "daterange"
-      label: string
-      startKey: string
-      endKey: string
-    }
+    kind: "daterange"
+    label: string
+    startKey: string
+    endKey: string
+  }
   | {
-      kind: "static-select"
-      key: string
-      label: string
-      options: { label: string; value: string | number }[]
-      multiple?: boolean
-    }
+    kind: "static-select"
+    key: string
+    label: string
+    options: { label: string; value: string | number }[]
+    multiple?: boolean
+  }
   | {
-      kind: "select"
-      key: string
-      label: string
-      endpoint: string
-      multiple?: boolean
-      depends?: string[]
-    }
+    kind: "select"
+    key: string
+    label: string
+    endpoint: string
+    multiple?: boolean
+    depends?: string[]
+  }
 
 type AsyncExportResponse = {
   job_id: string
@@ -289,6 +289,18 @@ const dateRangeState = computed(() => {
   }
 })
 
+function normalizeDownloadUrl(url: string) {
+  if (!url) return ""
+
+  if (url.startsWith("http://")) {
+    return url.replace("http://", "https://")
+  }
+
+  if (url.startsWith("https://")) return url
+
+  return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`
+}
+
 const isExportDisabled = computed(() => {
   return (
     loading.value ||
@@ -373,10 +385,16 @@ async function exportData() {
             // downloadUrl.value =
             //   job.file_url ||
             //   (props.jobDownloadUrl ? formatJobUrl(props.jobDownloadUrl, jobId) : "")
-            downloadUrl.value =
+            // downloadUrl.value =
+            //   job.file_url ||
+            //   (job.file ? `/media/${job.file}` : "") ||
+            //   (props.jobDownloadUrl ? formatJobUrl(props.jobDownloadUrl, jobId) : "")
+
+            downloadUrl.value = normalizeDownloadUrl(
               job.file_url ||
               (job.file ? `/media/${job.file}` : "") ||
               (props.jobDownloadUrl ? formatJobUrl(props.jobDownloadUrl, jobId) : "")
+            )
 
             notify.success("Export file is ready")
             emit("exported")
@@ -439,6 +457,8 @@ async function exportData() {
     }
   }
 }
+
+
 </script>
 
 <template>
@@ -455,11 +475,8 @@ async function exportData() {
           <template v-for="f in props.filtersSchema" :key="getKey(f)">
             <div v-if="f.kind === 'text'" class="grid gap-2">
               <label class="text-sm font-medium">{{ f.label }}</label>
-              <input
-                v-model="local[f.key]"
-                :placeholder="f.placeholder ?? f.label"
-                class="h-9 rounded-md border bg-background px-3 text-sm"
-              />
+              <input v-model="local[f.key]" :placeholder="f.placeholder ?? f.label"
+                class="h-9 rounded-md border bg-background px-3 text-sm" />
             </div>
 
             <div v-else-if="f.kind === 'daterange'" class="grid gap-3">
@@ -469,25 +486,19 @@ async function exportData() {
                 <label class="text-xs text-muted-foreground">From Date</label>
                 <Popover>
                   <PopoverTrigger as-child>
-                    <Button
-                      variant="outline"
-                      class="h-9 w-full justify-start text-left font-normal"
-                      :class="!local[f.startKey] && 'text-muted-foreground'"
-                    >
+                    <Button variant="outline" class="h-9 w-full justify-start text-left font-normal"
+                      :class="!local[f.startKey] && 'text-muted-foreground'">
                       <Icon name="i-radix-icons-calendar" class="mr-2 h-4 w-4 opacity-50" />
                       <span>{{ local[f.startKey] || "Pick start date" }}</span>
                     </Button>
                   </PopoverTrigger>
 
                   <PopoverContent class="w-auto p-0">
-                    <Calendar
-                      :model-value="local[f.startKey] ? parseDate(local[f.startKey]) : undefined"
-                      @update:model-value="(v:any) => {
+                    <Calendar :model-value="local[f.startKey] ? parseDate(local[f.startKey]) : undefined"
+                      @update:model-value="(v: any) => {
                         if (!v) return
-                        local[f.startKey] = `${v.year}-${String(v.month).padStart(2,'0')}-${String(v.day).padStart(2,'0')}`
-                      }"
-                      initial-focus
-                    />
+                        local[f.startKey] = `${v.year}-${String(v.month).padStart(2, '0')}-${String(v.day).padStart(2, '0')}`
+                      }" initial-focus />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -496,25 +507,19 @@ async function exportData() {
                 <label class="text-xs text-muted-foreground">To Date</label>
                 <Popover>
                   <PopoverTrigger as-child>
-                    <Button
-                      variant="outline"
-                      class="h-9 w-full justify-start text-left font-normal"
-                      :class="!local[f.endKey] && 'text-muted-foreground'"
-                    >
+                    <Button variant="outline" class="h-9 w-full justify-start text-left font-normal"
+                      :class="!local[f.endKey] && 'text-muted-foreground'">
                       <Icon name="i-radix-icons-calendar" class="mr-2 h-4 w-4 opacity-50" />
                       <span>{{ local[f.endKey] || "Pick end date" }}</span>
                     </Button>
                   </PopoverTrigger>
 
                   <PopoverContent class="w-auto p-0">
-                    <Calendar
-                      :model-value="local[f.endKey] ? parseDate(local[f.endKey]) : undefined"
-                      @update:model-value="(v:any) => {
+                    <Calendar :model-value="local[f.endKey] ? parseDate(local[f.endKey]) : undefined"
+                      @update:model-value="(v: any) => {
                         if (!v) return
-                        local[f.endKey] = `${v.year}-${String(v.month).padStart(2,'0')}-${String(v.day).padStart(2,'0')}`
-                      }"
-                      initial-focus
-                    />
+                        local[f.endKey] = `${v.year}-${String(v.month).padStart(2, '0')}-${String(v.day).padStart(2, '0')}`
+                      }" initial-focus />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -522,33 +527,19 @@ async function exportData() {
 
             <div v-else-if="f.kind === 'select' && !f.multiple" class="grid gap-2 pt-1 w-full">
               <label class="text-sm font-medium">{{ f.label }}</label>
-              <LookupSelect
-                v-model="local[f.key]"
-                variant="field"
-                :label="f.label"
-                :endpoint="f.endpoint"
-                :depends="getDependsObject(f.depends)"
-                :disabled="loading || isDependsMissing(f.depends)"
-              />
+              <LookupSelect v-model="local[f.key]" variant="field" :label="f.label" :endpoint="f.endpoint"
+                :depends="getDependsObject(f.depends)" :disabled="loading || isDependsMissing(f.depends)" />
             </div>
 
             <div v-else-if="f.kind === 'select' && f.multiple" class="grid gap-2">
               <label class="text-sm font-medium">{{ f.label }}</label>
-              <MultiLookupFilter
-                v-model="local[f.key]"
-                :title="f.label"
-                :endpoint="f.endpoint"
-                :depends="getDependsObject(f.depends)"
-                :disabled="loading || isDependsMissing(f.depends)"
-              />
+              <MultiLookupFilter v-model="local[f.key]" :title="f.label" :endpoint="f.endpoint"
+                :depends="getDependsObject(f.depends)" :disabled="loading || isDependsMissing(f.depends)" />
             </div>
 
             <div v-else-if="f.kind === 'static-select'" class="grid gap-2">
               <label class="text-sm font-medium">{{ f.label }}</label>
-              <select
-                v-model="local[f.key]"
-                class="h-9 rounded-md border bg-background px-3 text-sm"
-              >
+              <select v-model="local[f.key]" class="h-9 rounded-md border bg-background px-3 text-sm">
                 <option :value="null">All</option>
                 <option v-for="o in f.options" :key="o.value" :value="o.value">
                   {{ o.label }}
@@ -565,18 +556,13 @@ async function exportData() {
         <div v-if="loading && props.mode === 'async'" class="space-y-2 rounded-md border p-3">
           <div class="text-sm font-medium">{{ statusText }}</div>
           <div class="h-2 w-full overflow-hidden rounded bg-muted">
-            <div
-              class="h-full bg-primary transition-all"
-              :style="{ width: `${progress}%` }"
-            />
+            <div class="h-full bg-primary transition-all" :style="{ width: `${progress}%` }" />
           </div>
           <div class="text-xs text-muted-foreground">{{ progress }}%</div>
         </div>
 
-        <div
-          v-if="downloadUrl && !loading"
-          class="space-y-3 rounded-md border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30"
-        >
+        <div v-if="downloadUrl && !loading"
+          class="space-y-3 rounded-md border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30">
           <div class="text-sm font-medium text-green-700 dark:text-green-300">
             File export sudah siap.
           </div>
@@ -585,32 +571,33 @@ async function exportData() {
             Job ID: {{ finishedJobId }}
           </div>
 
-         <div class="pt-2">
-          <div class="ml-auto flex w-fit items-center gap-3">
-            <Button
-              variant="outline"
-              class="relative z-10 shrink-0"
-              @click="close"
-            >
-              Close
-            </Button>
+          <div class="pt-2">
+            <div class="ml-auto flex w-fit items-center gap-3">
+              <Button variant="outline" class="relative z-10 shrink-0" @click="close">
+                Close
+              </Button>
 
-            <Button as-child class="shrink-0">
-              <a :href="downloadUrl" target="_blank" rel="noopener noreferrer">
-                <Icon name="i-lucide-download" class="mr-2 h-4 w-4" />
-                Download File
-              </a>
-            </Button>
+              <!-- <Button as-child class="shrink-0">
+                <a :href="downloadUrl" target="_blank" rel="noopener noreferrer">
+                  <Icon name="i-lucide-download" class="mr-2 h-4 w-4" />
+                  Download File
+                </a>
+              </Button> -->
+              <Button as-child class="shrink-0">
+                <a :href="downloadUrl" :download="props.fileName ?? 'export.xlsx'" target="_blank"
+                  rel="noopener noreferrer">
+                  <Icon name="i-lucide-download" class="mr-2 h-4 w-4" />
+                  Download File
+                </a>
+              </Button>
+            </div>
           </div>
-        </div>
 
         </div>
       </div>
 
-    <div
-        v-if="dateRangeState.message && !downloadUrl"
-        class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700"
-      >
+      <div v-if="dateRangeState.message && !downloadUrl"
+        class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
         {{ dateRangeState.message }}
       </div>
 
