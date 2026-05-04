@@ -3,7 +3,6 @@ import { defineStore } from "pinia"
 type LoginResponse = {
   access: string
   refresh: string
-  // login boleh tidak kirim user lengkap (permissions biasanya belum ada)
   user?: any
   iup_access?: any
 }
@@ -13,19 +12,31 @@ type MeResponse = {
   iup_access: any
 }
 
+const apiUrl = (baseURL: string, path: string) => {
+  const base = String(baseURL || "").replace(/\/$/, "")
+
+  const baseHasApi = base.endsWith("/api")
+  const pathHasApi = /^\/?api\//.test(path)
+
+  let cleanPath = path
+
+  if (baseHasApi && pathHasApi) {
+    cleanPath = path.replace(/^\/?api\//, "/")
+  }
+
+  const normalizedPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`
+
+  return `${base}${normalizedPath}`
+}
+
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     access: "" as string,
     refresh: "" as string,
     user: null as any,
     iupAccess: null as any,
-
-    // meLoaded = user + permissions sudah siap
     meLoaded: false as boolean,
-
-    // iupLoaded = iupAccess sudah siap
     iupLoaded: false as boolean,
-
     mePromise: null as Promise<any> | null,
   }),
 
@@ -57,10 +68,7 @@ export const useAuthStore = defineStore("auth", {
 
       const hasPerms = Array.isArray(this.user?.permissions)
 
-      // identity siap kalau sudah ada permissions
       this.meLoaded = !!(this.access && this.user && hasPerms)
-
-      // iup siap kalau ada iupAccess
       this.iupLoaded = !!(this.access && this.iupAccess)
     },
 
@@ -106,26 +114,21 @@ export const useAuthStore = defineStore("auth", {
       const baseURL = config.public.apiBaseUrl
 
       try {
-        const res = await $fetch<LoginResponse>(`${baseURL}/api/auth/login/`, {
+        const res = await $fetch<LoginResponse>(apiUrl(baseURL, "/api/auth/login/"), {
           method: "POST",
           body: { username, password },
         })
 
-        // simpan token dulu
         this.access = res.access
         this.refresh = res.refresh
-
-        // optional: kalau login mengirim user/iup_access, simpan dulu (boleh)
         this.user = res.user ?? this.user
         this.iupAccess = res.iup_access ?? this.iupAccess
 
-        // PENTING: jangan anggap meLoaded true sebelum ada permissions
         this.meLoaded = false
         this.iupLoaded = !!(this.access && this.iupAccess)
 
         this.saveToStorage()
 
-        // WAJIB: ambil /me supaya permissions masuk
         await this.fetchMe()
       } catch (e: any) {
         const msg =
@@ -138,9 +141,11 @@ export const useAuthStore = defineStore("auth", {
 
     async fetchMe() {
       const hasPerms = Array.isArray(this.user?.permissions)
+
       if (this.meLoaded && hasPerms) {
         return { user: this.user, iup_access: this.iupAccess }
       }
+
       if (this.mePromise) return this.mePromise
 
       this.mePromise = (async () => {
@@ -150,7 +155,6 @@ export const useAuthStore = defineStore("auth", {
         this.user = res.user
         this.iupAccess = res.iup_access
 
-        // update flags
         this.meLoaded = Array.isArray(this.user?.permissions)
         this.iupLoaded = !!this.iupAccess
 
@@ -171,7 +175,7 @@ export const useAuthStore = defineStore("auth", {
       const config = useRuntimeConfig()
       const baseURL = config.public.apiBaseUrl
 
-      const res = await $fetch<{ access: string }>(`${baseURL}/api/auth/refresh/`, {
+      const res = await $fetch<{ access: string }>(apiUrl(baseURL, "/api/auth/refresh/"), {
         method: "POST",
         body: { refresh: this.refresh },
       })

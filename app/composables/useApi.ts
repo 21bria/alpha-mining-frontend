@@ -1,14 +1,3 @@
-// type HttpMethod =
-//   | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-//   | 'get' | 'post' | 'put' | 'patch' | 'delete'
-
-// type RequestOpts = {
-//   method?: HttpMethod
-//   query?: Record<string, any>
-//   body?: any
-//   headers?: Record<string, string>
-// }
-
 
 type HttpMethod =
   | "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
