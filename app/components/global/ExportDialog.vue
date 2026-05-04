@@ -292,12 +292,10 @@ const dateRangeState = computed(() => {
 function normalizeDownloadUrl(url: string) {
   if (!url) return ""
 
-  if (url.startsWith("http://")) {
-    return url.replace("http://", "https://")
-  }
+  // kalau sudah full URL → pakai saja
+  if (url.startsWith("http")) return url
 
-  if (url.startsWith("https://")) return url
-
+  // kalau relatif → ikut origin sekarang
   return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`
 }
 
@@ -385,6 +383,7 @@ async function exportData() {
             // downloadUrl.value =
             //   job.file_url ||
             //   (props.jobDownloadUrl ? formatJobUrl(props.jobDownloadUrl, jobId) : "")
+            
             // downloadUrl.value =
             //   job.file_url ||
             //   (job.file ? `/media/${job.file}` : "") ||
