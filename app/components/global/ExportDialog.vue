@@ -370,8 +370,12 @@ async function exportData() {
             loading.value = false
             statusText.value = "Export completed. File is ready to download."
 
+            // downloadUrl.value =
+            //   job.file_url ||
+            //   (props.jobDownloadUrl ? formatJobUrl(props.jobDownloadUrl, jobId) : "")
             downloadUrl.value =
               job.file_url ||
+              (job.file ? `/media/${job.file}` : "") ||
               (props.jobDownloadUrl ? formatJobUrl(props.jobDownloadUrl, jobId) : "")
 
             notify.success("Export file is ready")
