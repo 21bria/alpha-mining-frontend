@@ -289,18 +289,33 @@ const dateRangeState = computed(() => {
   }
 })
 
+// function normalizeDownloadUrl(url: string) {
+//   if (!url) return ""
+
+//   if (url.startsWith("http://")) {
+//     return url.replace("http://", "https://")
+//   }
+
+//   if (url.startsWith("https://")) return url
+
+//   return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`
+// }
+
 function normalizeDownloadUrl(url: string) {
   if (!url) return ""
 
-  if (url.startsWith("http://")) {
-    return url.replace("http://", "https://")
+  // kalau sudah full URL → pakai saja
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    // kalau di server (https), paksa jadi https
+    if (window.location.protocol === "https:" && url.startsWith("http://")) {
+      return url.replace("http://", "https://")
+    }
+    return url
   }
 
-  if (url.startsWith("https://")) return url
-
+  // kalau relatif → ikut origin
   return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`
 }
-
 const isExportDisabled = computed(() => {
   return (
     loading.value ||
@@ -382,10 +397,6 @@ async function exportData() {
             loading.value = false
             statusText.value = "Export completed. File is ready to download."
 
-            // downloadUrl.value =
-            //   job.file_url ||
-            //   (props.jobDownloadUrl ? formatJobUrl(props.jobDownloadUrl, jobId) : "")
-            
             // downloadUrl.value =
             //   job.file_url ||
             //   (job.file ? `/media/${job.file}` : "") ||
@@ -584,13 +595,6 @@ async function exportData() {
                   Download File
                 </a>
               </Button>
-              <!-- <Button as-child class="shrink-0">
-                <a :href="downloadUrl" :download="props.fileName ?? 'export.xlsx'" target="_blank"
-                  rel="noopener noreferrer">
-                  <Icon name="i-lucide-download" class="mr-2 h-4 w-4" />
-                  Download File
-                </a>
-              </Button> -->
             </div>
           </div>
 
