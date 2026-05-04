@@ -47,7 +47,7 @@ const { sidebar } = useAppSettings()
       <Search />
     </SidebarHeader>
 
-    <SidebarContent>
+    <SidebarContent class="scrollbar-hover">
       <SidebarGroup v-for="(nav, indexGroup) in navMenu" :key="indexGroup">
         <SidebarGroupLabel v-if="nav.heading">
           {{ nav.heading }}

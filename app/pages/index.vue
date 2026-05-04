@@ -18,32 +18,38 @@
         </div>
 
         <div class="grid grid-cols-12 gap-5 pt-6">
-          <!-- LEFT: APP LAUNCHER -->
-          <div class="col-span-12 xl:col-span-7">
-            <div
-              class="w-full rounded-[1.75rem] border bg-gradient-to-br from-background via-muted/20 to-background px-6 py-5 shadow-sm">
-              <div class="flex flex-wrap gap-4">
-                <button v-for="item in appMenus" :key="item.key" type="button"
-                  class="group relative h-[120px] w-[165px] flex flex-col items-center justify-center gap-2 rounded-[1.4rem] border bg-card/80 p-3 text-center shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] hover:border-primary/50 hover:shadow-lg active:scale-95"
-                  @click="openAppMenu(item)">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-[1rem] shadow-md transition-all duration-300 group-hover:scale-110"
-                    :class="item.iconClass">
-                    <component :is="item.icon" class="h-6 w-6 text-white" />
-                  </div>
+         <!-- LEFT: APP LAUNCHER -->
+        <div class="col-span-12 xl:col-span-7">
+          <div
+            class="w-full rounded-[1.35rem] border bg-gradient-to-br from-background via-muted/20 to-background px-4 py-6 shadow-sm sm:px-6 sm:py-5"
+          >
+            <div class="mx-auto grid max-w-4xl grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-y-8 gap-x-5 justify-items-center">
+              <button
+                v-for="item in appMenus"
+                :key="item.key"
+                type="button"
+                class="group flex min-w-0 flex-col items-center justify-start gap-2 p-1 text-center transition-all duration-300 hover:scale-105 active:scale-95"
+                @click="openAppMenu(item)"
+              >
+                <div
+                  class="flex h-14 w-14 items-center justify-center rounded-[1.35rem] shadow-lg ring-1 ring-white/15 transition-all duration-300 group-hover:scale-110 sm:h-16 sm:w-16 sm:rounded-[1.5rem]"
+                  :class="item.iconClass"
+                >
+                  <component :is="item.icon" class="h-7 w-7 text-white sm:h-8 sm:w-8" />
+                </div>
 
-                  <div>
-                    <p class="text-sm font-medium leading-none">
-                      {{ item.label }}
-                    </p>
-                    <p class="mt-0.5 text-[11px] text-muted-foreground">
-                      {{ item.description }}
-                    </p>
-                  </div>
-                </button>
-              </div>
+                <div class="max-w-full min-w-0">
+                  <p class="truncate text-[12px] font-medium leading-tight sm:text-sm">
+                    {{ item.label }}
+                  </p>
+                  <p class="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">
+                    {{ item.description }}
+                  </p>
+                </div>
+              </button>
             </div>
           </div>
+        </div>
 
           <!-- RIGHT: DASHBOARD INFO CARD -->
           <div class="col-span-12 xl:col-span-5">
@@ -95,9 +101,7 @@ import { cleanQuery } from '@/utils/query'
 import {
   FileSliders,
   TrendingUp,
-  ChartArea,
   ChartScatter,
-  TrendingUpDown,
   Settings2,
   ChartPie,
   ChartNetwork

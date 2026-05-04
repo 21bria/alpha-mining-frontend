@@ -186,8 +186,8 @@ function emitRangeDelete() {
     />
 
     <div class="relative">
-      <div class="border rounded-md">
-        <Table>
+    <div class="border rounded-md overflow-x-auto table-scrollbar scroll-smooth">
+          <Table class="min-w-max">
           <TableHeader>
             <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
               <TableHead v-for="header in headerGroup.headers" :key="header.id">
