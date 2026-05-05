@@ -19,7 +19,7 @@ const userPerms = computed(() => {
       <LayoutHeader />
 
       <div class="flex flex-col flex-1 overflow-hidden">
-        <div class="@container/main p-4 lg:p-6 grow">
+        <div class="@container/main grow overflow-y-auto scroll-thin-page p-4 lg:p-6">
           <slot />
         </div>
       </div>

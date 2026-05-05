@@ -62,7 +62,6 @@
 .scroll-thin-page:hover::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
-
 /* TABLE: smooth, tipis, muncul jelas saat hover */
 .table-scrollbar {
   scrollbar-width: thin;
