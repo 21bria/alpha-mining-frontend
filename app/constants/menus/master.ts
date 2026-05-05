@@ -78,7 +78,7 @@ export const menusMaster: NavMenu[] = [
 
       {
         title: "Materials",
-        icon: "i-lucide-circle-pile",
+        icon: "i-lucide-arrow-down-z-a",
         link: "/master/materials",
         require: { any: ["master.view_material"] },
       },

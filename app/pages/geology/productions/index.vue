@@ -17,9 +17,7 @@ import ListDetaiForm from "@/modules/geology/productions/details/ListDetaiForm.v
     </div>
 
     <div class="w-full space-y-4">
-
       <Tabs default-value="list" class="w-full">
-
         <!-- TAB -->
         <TabsList class="grid w-[200px] grid-cols-2">
           <TabsTrigger value="list">
