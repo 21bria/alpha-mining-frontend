@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed,defineAsyncComponent} from 'vue'
 import { useChartFilterStore } from '~/stores/filters/chart-filter'
+import ChartScrollWrapper from '@/components/ui/apex-chart/ChartScrollWrapper.vue'
 import { useApi } from '@/composables/useApi'
 
 const { request } = useApi()
@@ -221,7 +222,17 @@ watch(
 <style scoped>
 .chart-mask {
   width: 100%;
-  min-width: 600px; /* atau props.chartData.series.length * 40 */
-  overflow-x: auto;
+  min-width: 600px;
+  overflow-x: hidden;
+}
+
+/* hide scrollbar semua browser */
+.chart-mask :deep(*) {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge lama */
+}
+
+.chart-mask :deep(*::-webkit-scrollbar) {
+  display: none;                  /* Chrome/Safari */
 }
 </style>

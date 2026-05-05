@@ -15,10 +15,10 @@ const userPerms = computed(() => {
   <SidebarProvider>
     <LayoutAppSidebar />
 
-    <SidebarInset>
+    <SidebarInset class="h-screen overflow-hidden">
       <LayoutHeader />
 
-      <div class="flex flex-col flex-1">
+      <div class="flex flex-col flex-1 overflow-hidden">
         <div class="@container/main p-4 lg:p-6 grow">
           <slot />
         </div>

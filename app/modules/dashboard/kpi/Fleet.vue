@@ -253,12 +253,15 @@ async function handleCopy() {
                 </div>
                 <div v-else class="space-y-6">
                   <div v-for="(rows, category) in groupedByCategory" :key="category" class="border rounded-lg p-4">
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto scroll-thin-x">
                       <div :style="{
                         minWidth: Math.max(buildChart(rows).categories.length * 70, 600) + 'px'
                       }">
-                        <BarChart :series="buildChart(rows).series" :categories="buildChart(rows).categories"
-                          :title="`${category} KPI`" />
+                        <BarChart
+                          :series="buildChart(rows).series" 
+                          :categories="buildChart(rows).categories"
+                          :title="`${category} KPI`" 
+                          />
                       </div>
                     </div>
                   </div>
@@ -283,12 +286,8 @@ async function handleCopy() {
                 Loading...
               </div>
               <div v-else>
-                <div class="h-[60vh] overflow-auto rounded-lg border bg-background">
+                <div class="h-[60vh] overflow-auto scroll-thin rounded-lg border bg-background">
                   <table class="min-w-[1100px] w-full border-separate border-spacing-0 text-sm">
-                    <!-- <caption class="caption-bottom py-3 text-sm text-muted-foreground">
-                      Latest fleet activity list
-                    </caption> -->
-
                     <thead class="sticky top-0 z-20 bg-background shadow-sm">
                       <tr
                         class="odd:bg-gray-50 even:bg-white dark:odd:bg-gray-800/20 dark:even:bg-gray-700/20 hover:bg-gray-100 dark:hover:bg-gray-700/40 text-sm">
@@ -347,4 +346,65 @@ async function handleCopy() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* SCROLL VERTICAL (TABLE) */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.scroll-thin:hover {
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+.scroll-thin:hover::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+}
+
+.scroll-thin:hover::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+
+/* SCROLL HORIZONTAL (CHART) */
+.scroll-thin-x {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.scroll-thin-x:hover {
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scroll-thin-x::-webkit-scrollbar {
+  height: 4px;
+}
+.scroll-thin-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-thin-x::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+.scroll-thin-x:hover::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+}
+</style>

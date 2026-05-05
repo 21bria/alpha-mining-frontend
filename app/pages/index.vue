@@ -1,5 +1,5 @@
 <template>
-  <div class="relative min-h-[calc(100vh-56px)] w-full overflow-hidden px-12 pt-8 pb-4 lg:px-14">
+  <div class="relative min-h-[calc(100vh-56px)] w-full overflow-hidden px-12 pt-4 pb-4 lg:px-14">
     <!-- CONTENT -->
     <div class="relative z-10 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <!-- HEADER + FILTER -->

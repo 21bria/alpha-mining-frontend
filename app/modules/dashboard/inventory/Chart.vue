@@ -1,7 +1,30 @@
-<template>
+<!-- <template>
   <div class="chart-mask" :class="{ scrollable: isScrollable }">
-    <component :is="BaseLineColumnArea" v-if="chartData" :series="chartData.series" :categories="chartData.categories"
-      :colors="colors" />
+    <component 
+    :is="BaseLineColumnArea" 
+    v-if="chartData" 
+    :series="chartData.series" 
+    :categories="chartData.categories"
+    :colors="colors" />
+  </div>
+</template> -->
+
+
+<template>
+  <div class="chart-mask">
+    <ChartScrollWrapper v-if="isScrollable">
+      <component 
+      :is="BaseLineColumnArea" 
+      v-if="chartData" 
+      :series="chartData.series" 
+      :categories="chartData.categories"
+      :colors="colors"
+      />
+    </ChartScrollWrapper>
+
+    <!-- fallback kalau nggak scroll -->
+    <component v-else :is="BaseLineColumnArea" v-if="chartData" :series="chartData.series"
+      :categories="chartData.categories" :colors="colors" />
   </div>
 </template>
 
@@ -9,6 +32,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useChartFilterStore } from '~/stores/filters/chart-filter'
 import BaseLineColumnArea from '@/components/ui/apex-chart/BaseLineColumnArea.vue'
+import ChartScrollWrapper from '@/components/ui/apex-chart/ChartScrollWrapper.vue'
 import { useApi } from '@/composables/useApi'
 const props = defineProps<{ filterType: string }>()
 
@@ -140,9 +164,18 @@ watch(
 <style scoped>
 .chart-mask {
   width: 100%;
-  /* max-width: 100%; */
   min-width: 600px;
-  /* atau props.chartData.series.length * 40 */
   overflow-x: hidden;
 }
+
+/* hide scrollbar semua browser */
+.chart-mask :deep(*) {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge lama */
+}
+
+.chart-mask :deep(*::-webkit-scrollbar) {
+  display: none;                  /* Chrome/Safari */
+}
+
 </style>

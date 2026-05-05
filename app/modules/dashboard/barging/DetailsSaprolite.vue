@@ -1,9 +1,16 @@
 <template>
   <div class="chart-mask" :class="{ scrollable: isScrollable }">
-    <component :is="chartComponent" v-if="chartData" :series="chartData.series" :categories="chartData.categories"
-      ore-type="SAP" :colors="colors" />
+    <component 
+      :is="chartComponent" 
+      v-if="chartData" 
+      :series="chartData.series" 
+      :categories="chartData.categories"
+      ore-type="SAP" 
+      :colors="colors" 
+      />
   </div>
 </template>
+
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, defineAsyncComponent } from 'vue'
 import { useChartFilterStore } from '@/stores/filters/chart-filter'
@@ -242,9 +249,17 @@ watch(
 <style scoped>
 .chart-mask {
   width: 100%;
-  /* max-width: 100%; */
   min-width: 600px;
-  /* atau props.chartData.series.length * 40 */
-  overflow-x: auto;
+  overflow-x: hidden;
+}
+
+/* hide scrollbar semua browser */
+.chart-mask :deep(*) {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge lama */
+}
+
+.chart-mask :deep(*::-webkit-scrollbar) {
+  display: none;                  /* Chrome/Safari */
 }
 </style>

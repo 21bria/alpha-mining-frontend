@@ -1,6 +1,12 @@
 <template>
   <ClientOnly>
-    <ApexChart ref="chart" height="260" type="bar" :options="mergedOptions" :series="series" />
+    <ApexChart 
+      ref="chart" 
+      height="260" 
+      type="bar" 
+      :options="mergedOptions"
+     :series="series" 
+    />
   </ClientOnly>
 </template>
 

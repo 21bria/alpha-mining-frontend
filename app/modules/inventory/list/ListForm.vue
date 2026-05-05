@@ -287,7 +287,7 @@ async function handleCopy() {
       @copy="handleCopy"
     />
 
-    <div ref="containerRef" class="h-[70vh] overflow-auto rounded-lg border bg-background">
+    <div ref="containerRef" class="h-[70vh] overflow-auto scroll-thin rounded-lg border bg-background">
       <table class="min-w-[1100px] w-full border-separate border-spacing-0 text-sm">
         <thead class="sticky top-0 z-20 bg-background shadow-sm">
           <tr>
@@ -361,3 +361,8 @@ async function handleCopy() {
     </div>
   </div>
 </template>
+
+<style scoped>
+
+
+</style>

@@ -286,7 +286,7 @@ async function handleCopy() {
     </div>
 
     <div v-else>
-      <div class="h-[65vh] overflow-auto rounded-lg border bg-background">
+      <div class="h-[65vh] overflow-auto scroll-thin rounded-lg border bg-background">
         <table class="min-w-[1300px] w-full border-separate border-spacing-0 text-sm whitespace-nowrap">
      
 
@@ -375,4 +375,7 @@ async function handleCopy() {
   </div>
 </template>
 
-<style scoped></style>
+
+<style scoped>
+
+</style>
