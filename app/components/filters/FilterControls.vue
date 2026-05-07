@@ -51,6 +51,17 @@ import DatePicker from '@/components/filters/DatePicker.vue'
 
 import { useChartFilterStore } from '~/stores/filters/chart-filter'
 
+const GLOBAL_ROLES = ['SYSTEM', 'MANAGEMENT', 'GLOBAL_VIEWER']
+
+const normalizedRole = computed(() =>
+  String(props.role ?? '').trim().toUpperCase()
+)
+
+const canChooseIup = computed(() =>
+  GLOBAL_ROLES.includes(normalizedRole.value)
+)
+
+
 type FilterOption = {
   value: FilterType
   label: string
@@ -58,8 +69,13 @@ type FilterOption = {
 
 type FilterType = 'all' | 'yearly' | 'monthly' | 'weekly' | 'range' | 'daily'
 
+// const props = defineProps<{
+//   role?: string
+// }>()
+
 const props = defineProps<{
   role?: string
+  fixedIup?: number | string | null
 }>()
 
 const emit = defineEmits<{
@@ -98,7 +114,8 @@ const selectedDate = ref<string>('')
 
 const isSyncingFromStore = ref(false)
 
-const showIup = computed(() => props.role !== 'SITE_USER')
+// const showIup = computed(() => props.role !== 'SITE_USER')
+const showIup = computed(() => canChooseIup.value)
 const showYear = computed(() => ['yearly', 'monthly', 'weekly'].includes(filterType.value))
 const showMonth = computed(() => ['monthly', 'weekly'].includes(filterType.value))
 const showWeek = computed(() => filterType.value === 'weekly')
@@ -121,6 +138,14 @@ function normalizeMonth(value: any): number | undefined {
   return undefined
 }
 
+function getEffectiveIupId() {
+  if (canChooseIup.value) {
+    return selectedIup.value !== null ? String(selectedIup.value) : null
+  }
+
+  return props.fixedIup ? String(props.fixedIup) : null
+}
+
 function emitFilters() {
   const payload = {
     type: filterType.value,
@@ -129,13 +154,27 @@ function emitFilters() {
     week: selectedWeek.value,
     range: selectedRange.value,
     date: selectedDate.value,
-    iup_id: selectedIup.value !== null ? String(selectedIup.value) : null
+    iup_id: getEffectiveIupId()
   }
 
   emit('apply', payload)
-
   chartFilter.apply(payload)
 }
+// function emitFilters() {
+//   const payload = {
+//     type: filterType.value,
+//     year: selectedYear.value,
+//     month: selectedMonth.value,
+//     week: selectedWeek.value,
+//     range: selectedRange.value,
+//     date: selectedDate.value,
+//     iup_id: selectedIup.value !== null ? String(selectedIup.value) : null
+//   }
+
+//   emit('apply', payload)
+
+//   chartFilter.apply(payload)
+// }
 
 /**
  * Reset field yang tidak dipakai ketika tipe filter berubah.
@@ -199,12 +238,17 @@ watch(
     }
 
     selectedDate.value = value.date || ''
-    selectedIup.value = value.iup_id ? Number(value.iup_id) : null
+    // selectedIup.value = value.iup_id ? Number(value.iup_id) : null
+
+    selectedIup.value = canChooseIup.value && value.iup_id
+      ? Number(value.iup_id)
+      : null
 
     queueMicrotask(() => {
       isSyncingFromStore.value = false
     })
   },
+
   {
     deep: true,
     immediate: true
@@ -231,6 +275,30 @@ watch(
   },
   {
     deep: true
+  }
+)
+
+/**
+ * Auto inject IUP untuk SITE_USER
+ * supaya tanpa pilih filter IUP
+ * data langsung mengikuti IUP user login.
+ */
+watch(
+  () => props.fixedIup,
+  (iupId) => {
+    if (!canChooseIup.value) {
+
+      selectedIup.value = iupId
+        ? Number(iupId)
+        : null
+
+      chartFilter.setIup(iupId ?? null)
+
+      emitFilters()
+    }
+  },
+  {
+    immediate: true
   }
 )
 </script>

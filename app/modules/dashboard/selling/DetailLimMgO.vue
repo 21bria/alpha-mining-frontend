@@ -1,16 +1,39 @@
 <template>
-  <div class="chart-mask">
+  <!-- <div class="chart-mask">
     <component :is="chartComponent" v-if="chartData" :series="chartData.series" :categories="chartData.categories"
       :colors="colors" :details="detailsData" />
+  </div> -->
+  <div class="chart-mask">
+     <ChartScrollWrapper v-if="isScrollable">
+       <component :is="chartComponent" 
+        v-if="chartData" 
+        :series="chartData.series" 
+        :categories="chartData.categories"
+        :colors="colors" 
+        :details="detailsData"
+        />
+     </ChartScrollWrapper>
+
+     <!-- fallback kalau nggak scroll -->
+     <component v-else :is="chartComponent" v-if="chartData" 
+      :series="chartData.series" 
+      :categories="chartData.categories"
+      :colors="colors" 
+      :details="detailsData"
+      />
   </div>
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, defineAsyncComponent } from 'vue'
 import { useChartFilterStore } from '~/stores/filters/chart-filter'
+import ChartScrollWrapper from '@/components/ui/apex-chart/ChartScrollWrapper.vue'
 import { useApi } from '@/composables/useApi'
 
 const { request } = useApi()
 
+const isScrollable = computed(() => {
+  return !['weekly', 'yearly', 'all'].includes(props.filterType)
+})
 function cleanQuery(obj: Record<string, any>) {
   return Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== '')

@@ -19,15 +19,21 @@ const userPerms = computed(() => {
       <LayoutHeader />
 
       <div class="flex flex-col flex-1 overflow-hidden">
-        <div class="@container/main grow overflow-y-auto scroll-thin-page p-4 lg:p-6">
+        <div class="@container/main grow overflow-y-auto hide-scrollbar p-4 lg:p-6">
           <slot />
         </div>
       </div>
     </SidebarInset>
   </SidebarProvider>
-
-  <!-- GLOBAL TOAST -->
-  <!-- <Toaster position="top-right" rich-colors /> -->
 </template>
 
-<style scoped></style>
+<style scoped>
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+</style>

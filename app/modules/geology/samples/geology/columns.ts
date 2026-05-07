@@ -74,7 +74,7 @@ export function getGeologyColumns(
     },
     {
       accessorKey: 'date_sample',
-      header: ({ column }) => h(DataTableColumnHeader, { column, title: 'date_sample' }),
+      header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Date' }),
       enableSorting: true,
       cell: ({ row }) => h('div', { class: 'font-medium' }, row.original.date_sample),
     },

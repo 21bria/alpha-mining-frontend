@@ -22,10 +22,10 @@ const userPerms = computed(() => {
 // satu pintu: filter section + auto hide heading kosong
 const navMenu = computed(() => filterNavMenu(navMenuRaw, userPerms.value))
 
-// bottom juga difilter (kalau kamu kasih require di menu bawah)
+// bottom juga difilter (kasih require di menu bawah)
 const navMenuBottom = computed(() => filterNavMenuItems(navMenuBottomRaw as any, userPerms.value))
 
-const teams = [{ name: "Alpha Apps.", logo: "i-lucide-square-code", plan: "Mining-Dashboard" }]
+const teams = [{ name: "Alpha Apps.", logo: "i-lucide-map-pin-check", plan: "Mining-Dashboard" }]
 
 const user = computed(() => {
   const profile = auth.user?.profile

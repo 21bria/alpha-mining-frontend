@@ -14,42 +14,48 @@
             </p>
           </div>
 
-          <FilterControls />
+          <!-- <FilterControls /> -->
+        <FilterControls
+          :role="auth.user?.role"
+          :fixed-iup="auth.iupAccess?.default_iup?.id"
+          @apply="handleApplyFilter"
+        />
         </div>
 
         <div class="grid grid-cols-12 gap-5 pt-6">
-         <!-- LEFT: APP LAUNCHER -->
-        <div class="col-span-12 xl:col-span-7">
-          <div
-            class="w-full rounded-[1.35rem] border bg-gradient-to-br from-background via-muted/20 to-background px-4 py-6 shadow-sm sm:px-6 sm:py-5"
-          >
-            <div class="mx-auto grid max-w-4xl grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-y-8 gap-x-5 justify-items-center">
-              <button
-                v-for="item in appMenus"
-                :key="item.key"
-                type="button"
-                class="group flex min-w-0 flex-col items-center justify-start gap-2 p-1 text-center transition-all duration-300 hover:scale-105 active:scale-95"
-                @click="openAppMenu(item)"
-              >
-                <div
-                  class="flex h-14 w-14 items-center justify-center rounded-[1.35rem] shadow-lg ring-1 ring-white/15 transition-all duration-300 group-hover:scale-110 sm:h-16 sm:w-16 sm:rounded-[1.5rem]"
-                  :class="item.iconClass"
-                >
-                  <component :is="item.icon" class="h-7 w-7 text-white sm:h-8 sm:w-8" />
-                </div>
+          <!-- LEFT: APP LAUNCHER -->
+          <div class="col-span-12 xl:col-span-7">
+            <!-- <p class="text-xs">
+              role: {{ auth.user?.role }}
+            </p>
+            <pre class="text-xs">
+              {{ JSON.stringify(auth.iupAccess, null, 2) }}
+            </pre> -->
+            <div
+              class="w-full rounded-[1.35rem] border bg-gradient-to-br from-background via-muted/20 to-background px-4 py-6 shadow-sm sm:px-6 sm:py-5">
+              <div
+                class="mx-auto grid max-w-4xl grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-y-8 gap-x-5 justify-items-center">
+                <button v-for="item in appMenus" :key="item.key" type="button"
+                  class="group flex min-w-0 flex-col items-center justify-start gap-2 p-1 text-center transition-all duration-300 hover:scale-105 active:scale-95"
+                  @click="openAppMenu(item)">
+                  <div
+                    class="flex h-14 w-14 items-center justify-center rounded-[1.35rem] shadow-lg ring-1 ring-white/15 transition-all duration-300 group-hover:scale-110 sm:h-16 sm:w-16 sm:rounded-[1.5rem]"
+                    :class="item.iconClass">
+                    <component :is="item.icon" class="h-7 w-7 text-white sm:h-8 sm:w-8" />
+                  </div>
 
-                <div class="max-w-full min-w-0">
-                  <p class="truncate text-[12px] font-medium leading-tight sm:text-sm">
-                    {{ item.label }}
-                  </p>
-                  <p class="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">
-                    {{ item.description }}
-                  </p>
-                </div>
-              </button>
+                  <div class="max-w-full min-w-0">
+                    <p class="truncate text-[12px] font-medium leading-tight sm:text-sm">
+                      {{ item.label }}
+                    </p>
+                    <p class="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">
+                      {{ item.description }}
+                    </p>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
           <!-- RIGHT: DASHBOARD INFO CARD -->
           <div class="col-span-12 xl:col-span-5">
@@ -93,10 +99,27 @@
   </div>
 </template>
 <script setup lang="ts">
+import { watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import FilterControls from '@/components/filters/FilterControls.vue'
 import { useChartFilterStore } from '~/stores/filters/chart-filter'
 import { cleanQuery } from '@/utils/query'
+import { useAuthStore } from '~/stores/auth'
+import { toast } from 'vue-sonner'
+
+const auth = useAuthStore()
+const router = useRouter()
+const chartFilter = useChartFilterStore()
+
+watch(
+  () => auth.iupAccess?.default_iup?.id,
+  (iupId) => {
+    if (auth.user?.role === 'SITE_USER' && iupId) {
+      chartFilter.setIup(iupId)
+    }
+  },
+  { immediate: true }
+)
 
 import {
   FileSliders,
@@ -107,8 +130,7 @@ import {
   ChartNetwork
 } from 'lucide-vue-next'
 
-const router = useRouter()
-const chartFilter = useChartFilterStore()
+
 
 type AppMenuItem = {
   key: string
@@ -170,6 +192,10 @@ const appMenus: AppMenuItem[] = [
   }
 ]
 
+function handleApplyFilter(payload: any) {
+  chartFilter.apply(payload)
+}
+
 function buildActiveQuery() {
   const type = chartFilter.type
 
@@ -204,7 +230,23 @@ function buildActiveQuery() {
   return cleanQuery(query)
 }
 
+// function openAppMenu(item: AppMenuItem) {
+//   router.push({
+//     path: item.path,
+//     query: buildActiveQuery()
+//   })
+// }
 function openAppMenu(item: AppMenuItem) {
+  const role = auth.user?.role
+
+  if (
+    ['SYSTEM','MANAGEMENT', 'GLOBAL_VIEWER'].includes(role || '') &&
+    !chartFilter.iup_id
+  ) {
+    toast.warning('Please select IUP first')
+    return
+  }
+
   router.push({
     path: item.path,
     query: buildActiveQuery()

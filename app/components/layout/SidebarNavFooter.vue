@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useSidebar } from '~/components/ui/sidebar'
-
+import { useChartFilterStore } from '~/stores/filters/chart-filter'
 defineProps<{
   user: {
     name: string
@@ -14,12 +14,20 @@ const { isMobile, setOpenMobile } = useSidebar()
 import { useAuthStore } from '~/stores/auth'
 
 const auth = useAuthStore()
+const chartFilter = useChartFilterStore()
+
+// function handleLogout() {
+//   auth.clear()
+//   navigateTo('/login')
+// }
 
 function handleLogout() {
+  chartFilter.reset()
+
   auth.clear()
+
   navigateTo('/login')
 }
-
 const showModalTheme = ref(false) 
 </script>
 

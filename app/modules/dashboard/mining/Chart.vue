@@ -224,13 +224,22 @@ watch(
   { immediate: true }
 )
 </script>
-
 <style scoped>
 .chart-mask {
   width: 100%;
   max-width: 100%;
-  /* overflow: hidden; */
-  overflow-x: auto;
-  /* scroll horizontal */
+  overflow: hidden;
+}
+
+/* hide scrollbar */
+.chart-mask :deep(*) {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chart-mask :deep(*::-webkit-scrollbar) {
+  width: 0 !important;
+  height: 0 !important;
+  display: none;
 }
 </style>
