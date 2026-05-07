@@ -14,6 +14,7 @@ import { samplesConfig, samplesCRUDConfig } from "@/modules/geology/samples/geol
 import { samplesFilters } from "@/modules/geology/samples/geology/filters"
 import { buildExportSchema } from "@/modules/geology/samples/geology/export"
 import GeologyForm from "@/modules/geology/samples/geology/components/GeologyDialog.vue"
+import SampleBulkEntryDialog from "@/modules/geology/samples/geology/components/SampleBulkEntryDialog.vue"
 import DeleteRangeDialog from "@/components/global/DeleteRangeDialog.vue"
 import ExportDialog from "@/components/global/ExportDialog.vue"
 
@@ -28,15 +29,15 @@ type ApiList<T> = {
 }
 
 type SamplePayload = {
-  id?: number
+  id?: string | number
   iup?: number | null
   tgl_sample: string | null
   shift: string | null
   id_type_sample: number | null
   id_method: number | null
   id_material: number | null
-  sampling_area: string | null
-  sampling_point: string | null
+  sampling_area: number | null
+  sampling_point: number | null
   sampling_deskripsi: string | null
   batch_code: string | null
   increments: number | null
@@ -49,7 +50,7 @@ type SamplePayload = {
 }
 
 type SampleDetail = {
-  id?: number
+  id?: string | number
   iup?: number | null
   tgl_sample?: string | null
   shift?: string | null
@@ -150,15 +151,12 @@ const formErrors = ref<Record<string, any> | null>(null)
 // delete state
 const deleteOpen = ref(false)
 const selectedDelete = ref<GeologyRow | null>(null)
+const bulkDialogOpen = ref(false)
 
 // create
 function openCreate() {
-  formErrors.value = null
-  selected.value = null
-  mode.value = "create"
-  dialogOpen.value = true
+  bulkDialogOpen.value = true
 }
-
 // edit
 async function openEdit(row: GeologyRow) {
   formErrors.value = null
@@ -205,6 +203,25 @@ async function submit(payload: SamplePayload) {
     formErrors.value = e?.data ?? {
       detail: e?.message || "Failed to save",
     }
+  } finally {
+    formLoading.value = false
+  }
+}
+// bulk submit
+async function submitBulk(payload: SamplePayload[]) {
+  formLoading.value = true
+
+  try {
+    await request("/api/geology/samples-crud/bulk-create/", {
+      method: "POST",
+      body: payload,
+    })
+
+    notify.success("Bulk samples created")
+    bulkDialogOpen.value = false
+    await refresh()
+  } catch (e: any) {
+    notify.error(e?.data?.detail || e?.message || "Failed bulk create")
   } finally {
     formLoading.value = false
   }
@@ -403,6 +420,13 @@ watch(error, (v) => {
       :errors="formErrors || undefined" 
       @submit="submit" 
     />
+    
+    <SampleBulkEntryDialog
+      v-model:open="bulkDialogOpen"
+      :loading="formLoading"
+      :role="currentRole"
+      @submit="submitBulk"
+    />
 
     <ExportDialog
       v-model:open="exportOpen"
@@ -418,12 +442,16 @@ watch(error, (v) => {
       {{ (error as any)?.message || "Failed to load data" }}
     </div>
 
-    <ConfirmDelete v-model:open="deleteOpen" title="Delete Samples"
+    <ConfirmDelete 
+      v-model:open="deleteOpen" title="Delete Samples"
       :description="`Are you sure you want to delete '${selectedDelete?.sample_id}'? This action cannot be undone.`"
-      @confirm="confirmDelete" />
+      @confirm="confirmDelete" 
+      />
 
-    <ConfirmDelete v-model:open="bulkDeleteOpen" title="Bulk Delete Samples"
+    <ConfirmDelete v-model:open="bulkDeleteOpen"
+       title="Bulk Delete Samples"
       :description="`Are you sure you want to delete ${bulkDeleteIds.length} sample(s)? This action cannot be undone.`"
-      @confirm="confirmBulkDelete" />
+      @confirm="confirmBulkDelete" 
+    />
   </div>
 </template>

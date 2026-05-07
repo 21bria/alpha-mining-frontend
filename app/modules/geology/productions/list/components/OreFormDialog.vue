@@ -971,6 +971,7 @@ watch(
   { immediate: true }
 )
 </script>
+
 <template>
   <Dialog :open="open" @update:open="(v) => emit('update:open', v)">
     <DialogContent class="sm:max-w-7xl max-h-[90vh] overflow-y-auto">

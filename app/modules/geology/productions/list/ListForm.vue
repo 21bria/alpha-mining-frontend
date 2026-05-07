@@ -15,6 +15,7 @@ import { productionsConfig, productionsCRUDConfig } from "@/modules/geology/prod
 import { productionsFilters } from "@/modules/geology/productions/list/filters"
 import { buildExportSchema } from "@/modules/geology/productions/list/export"
 import OreForm from "@/modules/geology/productions/list/components/OreFormDialog.vue"
+import OreBulkEntryDialog from "@/modules/geology/productions/list/components/OreBulkEntryDialog.vue"
 import { useCurrentRole } from "@/composables/useCurrentRole"
 
 const  {currentRole}  = useCurrentRole()
@@ -175,6 +176,7 @@ function onSort({ key, dir }: { key: string | null; dir: "asc" | "desc" | null }
 }
 
 // dialog state
+const bulkDialogOpen = ref(false)
 const dialogOpen = ref(false)
 const mode = ref<"create" | "edit">("create")
 const selected = ref<ProductionDetail | null>(null)
@@ -186,11 +188,15 @@ const deleteOpen = ref(false)
 const selectedDelete = ref<ProductionsRow | null>(null)
 
 // create
+// function openCreate() {
+//   formErrors.value = null
+//   selected.value = null
+//   mode.value = "create"
+//   dialogOpen.value = true
+// }
+
 function openCreate() {
-  formErrors.value = null
-  selected.value = null
-  mode.value = "create"
-  dialogOpen.value = true
+  bulkDialogOpen.value = true
 }
 
 // edit
@@ -239,6 +245,32 @@ async function submit(payload: ProductionPayload) {
     formErrors.value = e?.data ?? {
       detail: e?.message || "Failed to save",
     }
+  } finally {
+    formLoading.value = false
+  }
+}
+
+async function submitBulk(payload: ProductionPayload[]) {
+  formLoading.value = true
+
+  try {
+    await request("/api/geology/productions-crud/bulk-create/", {
+      method: "POST",
+      body: payload,
+    })
+
+    notify.success("Bulk ore production created")
+
+    bulkDialogOpen.value = false
+
+    await refresh()
+    await loadSummary()
+  } catch (e: any) {
+    notify.error(
+      e?.data?.detail ||
+      e?.message ||
+      "Failed bulk create"
+    )
   } finally {
     formLoading.value = false
   }
@@ -496,6 +528,13 @@ onMounted(() => {
       :loading="formLoading"
       :errors="formErrors || undefined" 
       @submit="submit" 
+      />
+
+      <OreBulkEntryDialog
+        v-model:open="bulkDialogOpen"
+        :loading="formLoading"
+        :role="currentRole"
+        @submit="submitBulk"
       />
 
     <DeleteRangeDialog

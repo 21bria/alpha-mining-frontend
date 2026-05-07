@@ -10,6 +10,7 @@ import { useApi } from "@/composables/useApi"
 
 import ImportDialog from "@/components/import/ImportDialog.vue"
 import WaybillsForm from "@/modules/geology/waybills/components/WaybillsDialogForm.vue"
+
 import DeleteRangeDialog from "@/components/global/DeleteRangeDialog.vue"
 import ExportDialog from "@/components/global/ExportDialog.vue"
 import { getWaybillsColumns, type WaybillsRow } from "@/modules/geology/waybills/columns"
@@ -21,6 +22,7 @@ import { useCurrentRole } from "@/composables/useCurrentRole"
 
 const { request } = useApi()
 const notify = useNotify()
+const router = useRouter()
 
 const  {currentRole}  = useCurrentRole()
 const userRole = ref<UserRole>("SYSTEM")
@@ -112,12 +114,11 @@ const deleteOpen = ref(false)
 const selectedDelete = ref<WaybillsRow | null>(null)
 
 // actions
+
 const openCreate = () => {
-  formErrors.value = null
-  selected.value = null
-  mode.value = "create"
-  dialogOpen.value = true
+  router.push("/geology/waybills/create")
 }
+
 const openEdit = (row: WaybillsRow) => {
   formErrors.value = null
   selected.value = row

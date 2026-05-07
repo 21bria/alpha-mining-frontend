@@ -13,6 +13,7 @@ import { samplesConfig, samplesCRUDConfig } from "@/modules/geology/samples/sell
 import { samplesFilters } from "@/modules/geology/samples/selling/filters"
 import { buildExportSchema } from "@/modules/geology/samples/selling/export"
 import GeologyForm from "@/modules/geology/samples/selling/components/SellingDialog.vue"
+import SampleBulkEntryDialog from "@/modules/geology/samples/selling/components/SampleBulkEntryDialog.vue"
 import DeleteRangeDialog from "@/components/global/DeleteRangeDialog.vue"
 import ExportDialog from "@/components/global/ExportDialog.vue"
 import { useCurrentRole } from "@/composables/useCurrentRole"
@@ -32,8 +33,8 @@ type SamplePayload = {
   id_type_sample: number | null
   id_method: number | null
   id_material: number | null
-  discharge_area: string | null
-  product_code: string | null
+  discharge_area: number | null
+  product_code: number | null
   sampling_deskripsi: string | null
   batch_code: string | null
   increments: number | null
@@ -53,8 +54,8 @@ type SampleDetail = {
   id_type_sample?: number | null
   id_method?: number | null
   id_material?: number | null
-  discharge_area?: string | null
-  product_code?: string | null
+  discharge_area?: number | null
+  product_code?: number | null
   sampling_deskripsi?: string | null
   batch_code?: string | null
   increments?: number | null
@@ -148,12 +149,11 @@ const formErrors = ref<Record<string, any> | null>(null)
 const deleteOpen = ref(false)
 const selectedDelete = ref<SellingRow | null>(null)
 
+const bulkDialogOpen = ref(false)
+
 // create
 function openCreate() {
-  formErrors.value = null
-  selected.value = null
-  mode.value = "create"
-  dialogOpen.value = true
+  bulkDialogOpen.value = true
 }
 
 // edit
@@ -206,7 +206,25 @@ async function submit(payload: SamplePayload) {
     formLoading.value = false
   }
 }
+// bulk submit
+async function submitBulk(payload: SamplePayload[]) {
+  formLoading.value = true
 
+  try {
+    await request("/api/selling/samples-crud/bulk-create/", {
+      method: "POST",
+      body: payload,
+    })
+
+    notify.success("Bulk samples created")
+    bulkDialogOpen.value = false
+    await refresh()
+  } catch (e: any) {
+    notify.error(e?.data?.detail || e?.message || "Failed bulk create")
+  } finally {
+    formLoading.value = false
+  }
+}
 // import
 const importOpen = ref(false)
 
@@ -251,7 +269,7 @@ function remove(row: SellingRow) {
 }
 
 async function deleteSamples(ids: (string | number)[]) {
-  return request("/api/geology/samples-crud/bulk-delete/", {
+  return request("/api/selling/samples-crud/bulk-delete/", {
     method: "POST",
     body: {
       ids,
@@ -349,8 +367,8 @@ watch(error, (v) => {
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-lg font-semibold">Samples Geology</h3>
-        <p class="text-sm text-muted-foreground">Manage samples geology.</p>
+        <h3 class="text-lg font-semibold">Samples Selling</h3>
+        <p class="text-sm text-muted-foreground">Manage samples selling [LIS & SAS]</p>
       </div>
     </div>
 
@@ -398,6 +416,14 @@ watch(error, (v) => {
       :errors="formErrors || undefined" 
       @submit="submit" 
       />
+
+     <SampleBulkEntryDialog
+      v-model:open="bulkDialogOpen"
+      :loading="formLoading"
+      :role="currentRole"
+      @submit="submitBulk"
+    />
+
 
     <ExportDialog
       v-model:open="exportOpen"
