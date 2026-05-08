@@ -38,6 +38,18 @@ type RowState = {
   pointOptions: LookupOption[]
   methodLoading: boolean
   pointLoading: boolean
+
+  sampleTypeOptions: LookupOption[]
+  sampleTypeLoading: boolean
+  sampleTypeSearch: string
+
+  materialOptions: LookupOption[]
+  materialLoading: boolean
+  materialSearch: string
+
+  samplingAreaOptions: LookupOption[]
+  samplingAreaLoading: boolean
+  samplingAreaSearch: string
 }
 
 const props = defineProps<{
@@ -86,6 +98,18 @@ function emptyRow(): RowState {
     pointOptions: [],
     methodLoading: false,
     pointLoading: false,
+
+    sampleTypeOptions: [],
+    sampleTypeLoading: false,
+    sampleTypeSearch: "",
+
+    materialOptions: [],
+    materialLoading: false,
+    materialSearch: "",
+
+    samplingAreaOptions: [],
+    samplingAreaLoading: false,
+    samplingAreaSearch: "",
   }
 }
 
@@ -95,9 +119,30 @@ const rows = ref<RowState[]>([
   emptyRow(),
 ])
 
+// function addRow() {
+//   rows.value.push(emptyRow())
+  
+// }
+
 function addRow() {
-  rows.value.push(emptyRow())
+  const row = emptyRow()
+  rows.value.push(row)
+
+  fetchSampleTypes(row)
+  fetchMaterials(row)
+  fetchSamplingAreas(row)
 }
+
+// function duplicateRow(index: number) {
+//   const current = rows.value[index]
+//   if (!current) return
+
+//   rows.value.splice(index + 1, 0, {
+//     ...current,
+//     methodOptions: [...current.methodOptions],
+//     pointOptions: [...current.pointOptions],
+//   })
+// }
 
 function duplicateRow(index: number) {
   const current = rows.value[index]
@@ -105,6 +150,11 @@ function duplicateRow(index: number) {
 
   rows.value.splice(index + 1, 0, {
     ...current,
+
+    sampleTypeOptions: [...current.sampleTypeOptions],
+    materialOptions: [...current.materialOptions],
+    samplingAreaOptions: [...current.samplingAreaOptions],
+
     methodOptions: [...current.methodOptions],
     pointOptions: [...current.pointOptions],
   })
@@ -140,19 +190,11 @@ function toLookupOption(item: any, valueKeys: string[], labelKeys: string[]): Lo
 
 /* GLOBAL OPTIONS */
 const mineIUPOptions = ref<MineIupOption[]>([])
-const sampleTypeOptions = ref<LookupOption[]>([])
-const materialOptions = ref<LookupOption[]>([])
-const samplingAreaOptions = ref<LookupOption[]>([])
+
 
 const mineIUPLoading = ref(false)
-const sampleTypeLoading = ref(false)
-const materialLoading = ref(false)
-const samplingAreaLoading = ref(false)
 
 const mineIUPSearch = ref("")
-const sampleTypeSearch = ref("")
-const materialSearch = ref("")
-const samplingAreaSearch = ref("")
 
 async function fetchMineIUP(q = "") {
   if (!canChooseIup.value) return
@@ -175,74 +217,70 @@ async function fetchMineIUP(q = "") {
   }
 }
 
-async function fetchSampleTypes(q = "") {
-  sampleTypeLoading.value = true
-
+async function fetchSampleTypes(row: RowState, q = "") {
+  row.sampleTypeLoading = true
   try {
     const res: any = await request("/api/master/lookups/sample-type/", {
       method: "GET",
       query: {
         q,
         page: 1,
-        page_size: 50,
+        page_size: 20,
         category: ["geology", "production"],
-
         value_key: "id",
         label_key: "type_sample",
       },
     })
 
-    sampleTypeOptions.value = (res?.results ?? []).map((item: any) =>
+    row.sampleTypeOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["id"], ["type_sample", "name"])
     )
   } finally {
-    sampleTypeLoading.value = false
+    row.sampleTypeLoading = false
   }
 }
 
-async function fetchMaterials(q = "") {
-  materialLoading.value = true
-
+async function fetchMaterials(row: RowState, q = "") {
+  row.materialLoading = true
   try {
     const res: any = await request("/api/master/lookups/material/", {
       method: "GET",
       query: {
         q,
         page: 1,
-        page_size: 50,
+        page_size: 20,
         value_key: "id",
         label_key: "name",
       },
     })
 
-    materialOptions.value = (res?.results ?? []).map((item: any) =>
+    row.materialOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["id"], ["name", "material"])
     )
   } finally {
-    materialLoading.value = false
+    row.materialLoading = false
   }
 }
 
-async function fetchSamplingAreas(q = "") {
-  samplingAreaLoading.value = true
-
+async function fetchSamplingAreas(row: RowState, q = "") {
+  row.samplingAreaLoading = true
   try {
     const res: any = await request("/api/master/lookups/mine-dumping/", {
       method: "GET",
       query: {
         q,
         page: 1,
-        page_size: 50,
+        page_size: 20,
         value_key: "id",
         label_key: "dumping_point",
       },
     })
 
-    samplingAreaOptions.value = (res?.results ?? []).map((item: any) =>
+    row.samplingAreaOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["id"], ["dumping_point", "name"])
     )
   } finally {
-    samplingAreaLoading.value = false
+    row.samplingAreaLoading = false
   }
 }
 
@@ -327,9 +365,18 @@ async function onIupChange(row: RowState) {
 }
 
 const onMineIUPSearch = useDebounceFn(() => fetchMineIUP(mineIUPSearch.value), 300)
-const onSampleTypeSearch = useDebounceFn(() => fetchSampleTypes(sampleTypeSearch.value), 300)
-const onMaterialSearch = useDebounceFn(() => fetchMaterials(materialSearch.value), 300)
-const onSamplingAreaSearch = useDebounceFn(() => fetchSamplingAreas(samplingAreaSearch.value), 300)
+
+const onSampleTypeSearch = useDebounceFn((row: RowState) => {
+  fetchSampleTypes(row, row.sampleTypeSearch)
+}, 300)
+
+const onMaterialSearch = useDebounceFn((row: RowState) => {
+  fetchMaterials(row, row.materialSearch)
+}, 300)
+
+const onSamplingAreaSearch = useDebounceFn((row: RowState) => {
+  fetchSamplingAreas(row, row.samplingAreaSearch)
+}, 300)
 
 const onSampleMethodSearch = useDebounceFn((row: RowState, q: string) => {
   fetchSampleMethodsForRow(row, q)
@@ -346,9 +393,11 @@ watch(
 
     await Promise.all([
       fetchMineIUP(),
-      fetchSampleTypes(),
-      fetchMaterials(),
-      fetchSamplingAreas(),
+      ...rows.value.flatMap(row => [
+          fetchSampleTypes(row),
+          fetchMaterials(row),
+          fetchSamplingAreas(row)
+        ]),
     ])
   },
   { immediate: true }
@@ -511,25 +560,24 @@ function submit() {
               <TableCell>
                 <Select
                   v-model="row.id_type_sample"
-                  @update:model-value="() => onSampleTypeChange(row)"
-                >
+                  @update:model-value="() => onSampleTypeChange(row)">
                   <SelectTrigger class="w-44">
-                    <SelectValue :placeholder="sampleTypeLoading ? 'Loading...' : 'Sample Type'" />
+                    <SelectValue :placeholder="row.sampleTypeLoading ? 'Loading...' : 'Sample Type'" />
                   </SelectTrigger>
 
                   <SelectContent class="max-h-80 overflow-auto">
                     <div class="sticky top-0 z-10 bg-background p-2 border-b">
                       <Input
-                        v-model="sampleTypeSearch"
+                        v-model="row.sampleTypeSearch"
                         placeholder="Search type..."
                         class="h-8"
-                        @input="onSampleTypeSearch"
+                        @input="onSampleTypeSearch(row)"
                         @keydown.stop
                         @click.stop
                       />
                     </div>
 
-                    <SelectItem v-for="o in sampleTypeOptions" :key="o.value" :value="o.value">
+                    <SelectItem v-for="o in row.sampleTypeOptions" :key="o.value" :value="o.value">
                       {{ o.label }}
                     </SelectItem>
                   </SelectContent>
@@ -563,22 +611,22 @@ function submit() {
               <TableCell>
                 <Select v-model="row.id_material">
                   <SelectTrigger class="w-44">
-                    <SelectValue :placeholder="materialLoading ? 'Loading...' : 'Layer'" />
+                    <SelectValue :placeholder="row.materialLoading ? 'Loading...' : 'Layer'" />
                   </SelectTrigger>
 
                   <SelectContent class="max-h-80 overflow-auto">
                     <div class="sticky top-0 z-10 bg-background p-2 border-b">
                       <Input
-                        v-model="materialSearch"
+                        v-model="row.materialSearch"
                         placeholder="Search layer..."
                         class="h-8"
-                        @input="onMaterialSearch"
+                        @input="onMaterialSearch(row)"
                         @keydown.stop
                         @click.stop
                       />
                     </div>
 
-                    <SelectItem v-for="o in materialOptions" :key="o.value" :value="o.value">
+                   <SelectItem v-for="o in row.materialOptions" :key="o.value" :value="o.value">
                       {{ o.label }}
                     </SelectItem>
                   </SelectContent>
@@ -588,25 +636,24 @@ function submit() {
               <TableCell>
                 <Select
                   v-model="row.sampling_area"
-                  @update:model-value="() => onSamplingAreaChange(row)"
-                >
+                  @update:model-value="() => onSamplingAreaChange(row)">
                   <SelectTrigger class="w-48">
-                    <SelectValue :placeholder="samplingAreaLoading ? 'Loading...' : 'Sampling Area'" />
+                    <SelectValue :placeholder="row.samplingAreaLoading ? 'Loading...' : 'Sampling Area'" />
                   </SelectTrigger>
 
                   <SelectContent class="max-h-80 overflow-auto">
                     <div class="sticky top-0 z-10 bg-background p-2 border-b">
-                      <Input
-                        v-model="samplingAreaSearch"
+                     <Input
+                        v-model="row.samplingAreaSearch"
                         placeholder="Search area..."
                         class="h-8"
-                        @input="onSamplingAreaSearch"
+                        @input="onSamplingAreaSearch(row)"
                         @keydown.stop
                         @click.stop
                       />
                     </div>
 
-                    <SelectItem v-for="o in samplingAreaOptions" :key="o.value" :value="o.value">
+                    <SelectItem v-for="o in row.samplingAreaOptions" :key="o.value" :value="o.value">
                       {{ o.label }}
                     </SelectItem>
                   </SelectContent>

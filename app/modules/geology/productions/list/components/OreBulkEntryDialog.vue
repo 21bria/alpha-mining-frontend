@@ -39,6 +39,24 @@ type RowState = {
   truckFactorOptions: LookupOption[]
   oreClassLoading: boolean
   truckFactorLoading: boolean 
+
+  prospectOptions: LookupOption[]
+  blockOptions: LookupOption[]
+  materialOptions: LookupOption[]
+  gradeControlOptions: LookupOption[]
+  pileOptions: LookupOption[]
+
+  prospectLoading: boolean
+  blockLoading: boolean
+  materialLoading: boolean
+  gradeControlLoading: boolean
+  pileLoading: boolean
+
+  prospectSearch: string
+  blockSearch: string
+  materialSearch: string
+  gradeControlSearch: string
+  pileSearch: string
 }
 
 const props = defineProps<{
@@ -88,7 +106,25 @@ function emptyRow(): RowState {
     oreClassOptions: [],
     truckFactorOptions: [],
     oreClassLoading: false,
-    truckFactorLoading: false
+    truckFactorLoading: false,
+
+    prospectOptions: [],
+    blockOptions: [],
+    materialOptions: [],
+    gradeControlOptions: [],
+    pileOptions: [],
+
+    prospectLoading: false,
+    blockLoading: false,
+    materialLoading: false,
+    gradeControlLoading: false,
+    pileLoading: false,
+
+    prospectSearch: "",
+    blockSearch: "",
+    materialSearch: "",
+    gradeControlSearch: "",
+    pileSearch: "",
   }
 }
 
@@ -135,7 +171,15 @@ function toLookupOption(item: any, valueKeys: string[], labelKeys: string[]): Lo
 // }
 
 function addRow() {
-  rows.value.push(emptyRow())
+  const row = emptyRow()
+
+  rows.value.push(row)
+
+  fetchBlocks(row)
+  fetchProspects(row)
+  fetchMaterials(row)
+  fetchPiles(row)
+  fetchGradeControls(row)
 }
 
 function duplicateRow(index: number) {
@@ -144,9 +188,17 @@ function duplicateRow(index: number) {
 
   rows.value.splice(index + 1, 0, {
     ...current,
+
+    prospectOptions: [...current.prospectOptions],
+    blockOptions: [...current.blockOptions],
+    materialOptions: [...current.materialOptions],
+    gradeControlOptions: [...current.gradeControlOptions],
+    pileOptions: [...current.pileOptions],
+
+    oreClassOptions: [...current.oreClassOptions],
+    truckFactorOptions: [...current.truckFactorOptions],
   })
 }
-
 function removeRow(index: number) {
   if (rows.value.length === 1) return
   rows.value.splice(index, 1)
@@ -182,31 +234,12 @@ function onTruckFactorChange(row: RowState) {
 
 /* OPTIONS */
 const categoryOptions = ref<LookupOption[]>([])
-const blockOptions = ref<LookupOption[]>([])
-const prospectOptions = ref<LookupOption[]>([])
-const materialOptions = ref<LookupOption[]>([])
-const pileOptions = ref<LookupOption[]>([])
-const gradeControlOptions = ref<LookupOption[]>([])
-const oreClassOptions = ref<LookupOption[]>([])
-const truckFactorOptions = ref<LookupOption[]>([])
+const mineIUPOptions = ref<MineIupOption[]>([])
 
 const categorySearch = ref("")
-const blockSearch = ref("")
-const prospectSearch = ref("")
-const materialSearch = ref("")
-const pileSearch = ref("")
-const gradeControlSearch = ref("")
-const oreClassSearch = ref("")
-const truckFactorSearch = ref("")
 
 const categoryLoading = ref(false)
-const blockLoading = ref(false)
-const prospectLoading = ref(false)
-const materialLoading = ref(false)
-const pileLoading = ref(false)
-const gradeControlLoading = ref(false)
-const oreClassLoading = ref(false)
-const truckFactorLoading = ref(false)
+const mineIUPLoading = ref(false)
 
 async function fetchCategories(q = "") {
   categoryLoading.value = true
@@ -230,8 +263,9 @@ async function fetchCategories(q = "") {
   }
 }
 
-async function fetchBlocks(q = "") {
-  blockLoading.value = true
+async function fetchBlocks(row: RowState, q = "") {
+  row.blockLoading = true
+
   try {
     const res: any = await request("/api/master/lookups/mine-block/", {
       method: "GET",
@@ -244,16 +278,17 @@ async function fetchBlocks(q = "") {
       },
     })
 
-    blockOptions.value = (res?.results ?? []).map((item: any) =>
+    row.blockOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["id"], ["name"])
     )
   } finally {
-    blockLoading.value = false
+    row.blockLoading = false
   }
 }
 
-async function fetchProspects(q = "") {
-  prospectLoading.value = true
+
+async function fetchProspects(row: RowState, q = "") {
+  row.prospectLoading = true
   try {
     const res: any = await request("/api/master/lookups/mine-loading/", {
       method: "GET",
@@ -266,16 +301,16 @@ async function fetchProspects(q = "") {
       },
     })
 
-    prospectOptions.value = (res?.results ?? []).map((item: any) =>
+    row.prospectOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["id"], ["loading_point", "prospect_area", "name"])
     )
   } finally {
-    prospectLoading.value = false
+    row.prospectLoading = false
   }
 }
 
-async function fetchMaterials(q = "") {
-  materialLoading.value = true
+async function fetchMaterials(row: RowState, q = "") {
+  row.materialLoading = true
   try {
     const res: any = await request("/api/master/lookups/material/", {
       method: "GET",
@@ -289,16 +324,17 @@ async function fetchMaterials(q = "") {
       },
     })
 
-    materialOptions.value = (res?.results ?? []).map((item: any) =>
+    row.materialOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["id"], ["name", "material"])
     )
   } finally {
-    materialLoading.value = false
+    row.materialLoading = false
   }
 }
 
-async function fetchPiles(q = "") {
-  pileLoading.value = true
+async function fetchPiles(row: RowState, q = "") {
+  row.pileLoading = true
+
   try {
     const res: any = await request("/api/master/lookups/mine-dome/", {
       method: "GET",
@@ -311,33 +347,37 @@ async function fetchPiles(q = "") {
       },
     })
 
-    pileOptions.value = (res?.results ?? []).map((item: any) =>
+    row.pileOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["id"], ["pile_id", "name"])
     )
   } finally {
-    pileLoading.value = false
+    row.pileLoading = false
   }
 }
 
-async function fetchGradeControls(q = "") {
-  gradeControlLoading.value = true
-  try {
-    const res: any = await request("/api/master/lookups/grade-control/", {
-      method: "GET",
-      query: {
-        q,
-        page: 1,
-        page_size: 20,
-        value_key: "code",
-        label_key: "name",
-      },
-    })
+async function fetchGradeControls(row: RowState, q = "") {
+  row.gradeControlLoading = true
 
-    gradeControlOptions.value = (res?.results ?? []).map((item: any) =>
+  try {
+    const res: any = await request(
+      "/api/master/lookups/grade-control/",
+      {
+        method: "GET",
+        query: {
+          q,
+          page: 1,
+          page_size: 20,
+          value_key: "code",
+          label_key: "name",
+        },
+      }
+    )
+
+    row.gradeControlOptions = (res?.results ?? []).map((item: any) =>
       toLookupOption(item, ["code", "id"], ["code", "name"])
     )
   } finally {
-    gradeControlLoading.value = false
+    row.gradeControlLoading = false
   }
 }
 
@@ -404,8 +444,6 @@ type MineIupOption = {
   label: string
 }
 
-const mineIUPOptions = ref<MineIupOption[]>([])
-const mineIUPLoading = ref(false)
 
 async function fetchMineIUP() {
   if (!canChooseIup.value) return
@@ -427,11 +465,27 @@ async function fetchMineIUP() {
 }
 
 const onCategorySearch = useDebounceFn(() => fetchCategories(categorySearch.value), 300)
-const onBlockSearch = useDebounceFn(() => fetchBlocks(blockSearch.value), 300)
-const onProspectSearch = useDebounceFn(() => fetchProspects(prospectSearch.value), 300)
-const onMaterialSearch = useDebounceFn(() => fetchMaterials(materialSearch.value), 300)
-const onPileSearch = useDebounceFn(() => fetchPiles(pileSearch.value), 300)
-const onGradeControlSearch = useDebounceFn(() => fetchGradeControls(gradeControlSearch.value), 300)
+
+const onBlockSearch = useDebounceFn((row: RowState) => {
+  fetchBlocks(row, row.blockSearch)
+}, 300)
+
+const onProspectSearch = useDebounceFn((row: RowState) => {
+  fetchProspects(row, row.prospectSearch)
+}, 300)
+
+const onMaterialSearch = useDebounceFn((row: RowState) => {
+  fetchMaterials(row, row.materialSearch)
+}, 300)
+
+const onPileSearch = useDebounceFn((row: RowState) => {
+  fetchPiles(row, row.pileSearch)
+}, 300)
+
+const onGradeControlSearch = useDebounceFn((row: RowState) => {
+  fetchGradeControls(row, row.gradeControlSearch)
+}, 300)
+
 const onOreClassSearch = useDebounceFn((row: RowState, q: string) => {
   fetchOreClasses(row, q)
 }, 300)
@@ -460,11 +514,13 @@ watch(
     await Promise.all([
       fetchMineIUP(),
       fetchCategories(),
-      fetchBlocks(),
-      fetchProspects(),
-      fetchMaterials(),
-      fetchPiles(),
-      fetchGradeControls(),
+      ...rows.value.flatMap(row => [
+        fetchBlocks(row),
+        fetchProspects(row),
+        fetchMaterials(row),
+        fetchPiles(row),
+        fetchGradeControls(row),
+      ]),
     ])
   },
   { immediate: true }
@@ -655,20 +711,26 @@ function submit() {
               <TableCell>
                 <Select v-model="row.id_prospect_area">
                   <SelectTrigger class="w-52">
-                    <SelectValue :placeholder="prospectLoading ? 'Loading...' : 'Prospect Area'" />
+                    <SelectValue :placeholder="row.prospectLoading ? 'Loading...' : 'Prospect Area'" />
                   </SelectTrigger>
+
                   <SelectContent class="max-h-80 overflow-auto">
                     <div class="sticky top-0 z-10 bg-background p-2 border-b">
                       <Input
-                        v-model="prospectSearch"
+                        v-model="row.prospectSearch"
                         placeholder="Search prospect..."
                         class="h-8"
-                        @input="onProspectSearch"
+                        @input="onProspectSearch(row)"
                         @keydown.stop
                         @click.stop
                       />
                     </div>
-                    <SelectItem v-for="o in prospectOptions" :key="o.value" :value="o.value">
+
+                    <SelectItem
+                      v-for="o in row.prospectOptions"
+                      :key="o.value"
+                      :value="o.value"
+                    >
                       {{ o.label }}
                     </SelectItem>
                   </SelectContent>
@@ -678,20 +740,26 @@ function submit() {
               <TableCell>
                 <Select v-model="row.id_block">
                   <SelectTrigger class="w-44">
-                    <SelectValue :placeholder="blockLoading ? 'Loading...' : 'Block'" />
+                    <SelectValue :placeholder="row.blockLoading ? 'Loading...' : 'Block'" />
                   </SelectTrigger>
+
                   <SelectContent class="max-h-80 overflow-auto">
                     <div class="sticky top-0 z-10 bg-background p-2 border-b">
                       <Input
-                        v-model="blockSearch"
+                        v-model="row.blockSearch"
                         placeholder="Search block..."
                         class="h-8"
-                        @input="onBlockSearch"
+                        @input="onBlockSearch(row)"
                         @keydown.stop
                         @click.stop
                       />
                     </div>
-                    <SelectItem v-for="o in blockOptions" :key="o.value" :value="o.value">
+
+                    <SelectItem
+                      v-for="o in row.blockOptions"
+                      :key="o.value"
+                      :value="o.value"
+                    >
                       {{ o.label }}
                     </SelectItem>
                   </SelectContent>
@@ -706,23 +774,34 @@ function submit() {
                 <Input v-model="row.to_rl" type="number" class="w-28" />
               </TableCell>
 
-              <TableCell>
-                <Select v-model="row.id_material" @update:model-value="() => onMaterialChange(row)">
+             <TableCell>
+                <Select
+                  v-model="row.id_material"
+                  @update:model-value="() => onMaterialChange(row)"
+                >
                   <SelectTrigger class="w-28">
-                    <SelectValue :placeholder="materialLoading ? 'Loading...' : 'Material'" />
+                    <SelectValue
+                      :placeholder="row.materialLoading ? 'Loading...' : 'Material'"
+                    />
                   </SelectTrigger>
+
                   <SelectContent class="max-h-80 overflow-auto">
                     <div class="sticky top-0 z-10 bg-background p-2 border-b">
                       <Input
-                        v-model="materialSearch"
+                        v-model="row.materialSearch"
                         placeholder="Search material..."
                         class="h-8"
-                        @input="onMaterialSearch"
+                        @input="onMaterialSearch(row)"
                         @keydown.stop
                         @click.stop
                       />
                     </div>
-                    <SelectItem v-for="o in materialOptions" :key="o.value" :value="o.value">
+
+                    <SelectItem
+                      v-for="o in row.materialOptions"
+                      :key="o.value"
+                      :value="o.value"
+                    >
                       {{ o.label }}
                     </SelectItem>
                   </SelectContent>
@@ -763,49 +842,63 @@ function submit() {
               <TableCell>
                 <Select v-model="row.grade_control">
                   <SelectTrigger class="w-30">
-                    <SelectValue :placeholder="gradeControlLoading ? 'Loading...' : 'Grade Control'" />
+                    <SelectValue
+                      :placeholder="row.gradeControlLoading ? 'Loading...' : 'Grade Control'"
+                    />
                   </SelectTrigger>
+
                   <SelectContent class="max-h-80 overflow-auto">
                     <div class="sticky top-0 z-10 bg-background p-2 border-b">
                       <Input
-                        v-model="gradeControlSearch"
+                        v-model="row.gradeControlSearch"
                         placeholder="Search GC..."
                         class="h-8"
-                        @input="onGradeControlSearch"
+                        @input="onGradeControlSearch(row)"
                         @keydown.stop
                         @click.stop
                       />
                     </div>
-                    <SelectItem v-for="o in gradeControlOptions" :key="o.value" :value="o.value">
+
+                    <SelectItem
+                      v-for="o in row.gradeControlOptions"
+                      :key="o.value"
+                      :value="o.value"
+                    >
                       {{ o.label }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </TableCell>
 
-              <TableCell>
-                <Select v-model="row.id_pile">
-                  <SelectTrigger class="w-35">
-                    <SelectValue :placeholder="pileLoading ? 'Loading...' : 'Dome / Pile'" />
-                  </SelectTrigger>
-                  <SelectContent class="max-h-80 overflow-auto">
-                    <div class="sticky top-0 z-10 bg-background p-2 border-b">
-                      <Input
-                        v-model="pileSearch"
-                        placeholder="Search pile..."
-                        class="h-8"
-                        @input="onPileSearch"
-                        @keydown.stop
-                        @click.stop
-                      />
-                    </div>
-                    <SelectItem v-for="o in pileOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
+             <TableCell>
+              <Select v-model="row.id_pile">
+                <SelectTrigger class="w-35">
+                  <SelectValue :placeholder="row.pileLoading ? 'Loading...' : 'Dome / Pile'" />
+                </SelectTrigger>
 
+                <SelectContent class="max-h-80 overflow-auto">
+                  <div class="sticky top-0 z-10 bg-background p-2 border-b">
+                    <Input
+                      v-model="row.pileSearch"
+                      placeholder="Search pile..."
+                      class="h-8"
+                      @input="onPileSearch(row)"
+                      @keydown.stop
+                      @click.stop
+                    />
+                  </div>
+
+                  <SelectItem
+                    v-for="o in row.pileOptions"
+                    :key="o.value"
+                    :value="o.value"
+                  >
+                    {{ o.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </TableCell>
+            
               <TableCell>
                 <Input
                   v-model="row.batch_code"
