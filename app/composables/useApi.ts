@@ -82,10 +82,27 @@ export function useApi() {
     try {
       return await doFetch(auth.access)
     } catch (e: any) {
+      // if (e?.response?.status === 401 && auth.refresh) {
+      //   const newAccess = await auth.refreshToken()
+      //   return await doFetch(newAccess)
+      // }
+
+      // ACCESS TOKEN EXPIRED
       if (e?.response?.status === 401 && auth.refresh) {
-        const newAccess = await auth.refreshToken()
-        return await doFetch(newAccess)
+        try {
+          const newAccess = await auth.refreshToken()
+          return await doFetch(newAccess)
+        } catch (refreshError) {
+          auth.clear()
+
+          if (import.meta.client) {
+            await navigateTo("/login")
+          }
+
+          throw refreshError
+        }
       }
+
       throw e
     }
   }
