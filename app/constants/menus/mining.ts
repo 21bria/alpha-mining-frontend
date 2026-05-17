@@ -106,11 +106,14 @@ export const menusMining: NavMenu[] = [
               any: ["mining.view_hmunit"],
             },
           },
-          // {
-          //   title: 'Daily form',
-          //   icon: 'i-lucide-circle',
-          //   link: '/mining/timesheet/daily-form',
-          // },
+          {
+            title: 'Monitoring EWH',
+            icon: 'i-lucide-circle',
+            link: '/mining/unit-activity/monitoring',
+             require: {
+              any: ["mining.view_hmunit"],
+            },
+          },
         ],
       },
       {

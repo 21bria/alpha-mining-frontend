@@ -156,7 +156,7 @@ function buildClipboardText() {
 
   const headers = [
     "No", "Units", "Type", "Fuel", "Working", "Standby",
-    "Maintenance", "PA", "MA", "UA", "EU"
+    "Maintenance","Missing","Status","PA", "MA", "UA", "EU"
   ]
 
   const rows = tableData.value.map((row: any, i: number) => [
@@ -167,6 +167,8 @@ function buildClipboardText() {
     row.op,
     row.st,
     row.mt,
+    row.missing_hour,
+    row.status,
     `${row.pa ?? 0}%`,
     `${row.ma ?? 0}%`,
     `${row.ua ?? 0}%`,
@@ -257,11 +259,8 @@ async function handleCopy() {
                       <div :style="{
                         minWidth: Math.max(buildChart(rows).categories.length * 70, 600) + 'px'
                       }">
-                        <BarChart
-                          :series="buildChart(rows).series" 
-                          :categories="buildChart(rows).categories"
-                          :title="`${category} KPI`" 
-                          />
+                        <BarChart :series="buildChart(rows).series" :categories="buildChart(rows).categories"
+                          :title="`${category} KPI`" />
                       </div>
                     </div>
                   </div>
@@ -287,7 +286,7 @@ async function handleCopy() {
               </div>
               <div v-else>
                 <div class="h-[60vh] overflow-auto scroll-thin rounded-lg border bg-background">
-                  <table class="min-w-[1100px] w-full border-separate border-spacing-0 text-sm">
+                  <table class="min-w-[1250px] w-full border-separate border-spacing-0 text-sm">
                     <thead class="sticky top-0 z-20 bg-background shadow-sm">
                       <tr
                         class="odd:bg-gray-50 even:bg-white dark:odd:bg-gray-800/20 dark:even:bg-gray-700/20 hover:bg-gray-100 dark:hover:bg-gray-700/40 text-sm">
@@ -303,6 +302,12 @@ async function handleCopy() {
                         </th>
                         <th class="border-b bg-background px-2 py-2 text-right font-semibold whitespace-nowrap">
                           Maintenance</th>
+                        <th class="border-b bg-background px-2 py-2 text-right font-semibold whitespace-nowrap">
+                          Missing
+                        </th>
+                        <th class="border-b bg-background px-2 py-2 text-center font-semibold whitespace-nowrap">
+                          Status
+                        </th>
                         <th class="border-b bg-background px-2 py-2 text-right font-semibold whitespace-nowrap">PA</th>
                         <th class="border-b bg-background px-2 py-2 text-right font-semibold whitespace-nowrap">MA</th>
                         <th class="border-b bg-background px-2 py-2 text-right font-semibold whitespace-nowrap">UA</th>
@@ -320,6 +325,27 @@ async function handleCopy() {
                         <td class="border-b px-2 py-2 text-right">{{ row.op }}</td>
                         <td class="border-b px-2 py-2 text-right">{{ row.st }}</td>
                         <td class="border-b px-2 py-2 text-right">{{ row.mt }}</td>
+                        <td class="border-b px-2 py-2 text-right font-medium" :class="{
+                          'text-yellow-600 dark:text-yellow-400': row.status === 'Incomplete',
+                          'text-red-600 dark:text-red-400': row.status === 'Over'
+                        }">
+                          {{ row.missing_hour }}
+                        </td>
+
+                        <td class="border-b px-2 py-2 text-center">
+                          <span class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium" :class="{
+                            'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300':
+                              row.status === 'Incomplete',
+
+                            'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300':
+                              row.status === 'Over',
+
+                            'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300':
+                              row.status === 'Complete'
+                          }">
+                            {{ row.status }}
+                          </span>
+                        </td>
                         <td class="border-b px-2 py-2 text-right">{{ row.pa?.toFixed(0) }}%</td>
                         <td class="border-b px-2 py-2 text-right">{{ row.ma?.toFixed(0) }}%</td>
                         <td class="border-b px-2 py-2 text-right">{{ row.ua?.toFixed(0) }}%</td>
@@ -327,7 +353,7 @@ async function handleCopy() {
                       </tr>
 
                       <tr v-if="!tableData.length">
-                        <td colspan="11" class="px-2 py-4 text-center text-gray-400">
+                        <td colspan="13" class="px-2 py-4 text-center text-gray-400">
                           No data available
                         </td>
                       </tr>
@@ -392,9 +418,11 @@ async function handleCopy() {
 .scroll-thin::-webkit-scrollbar {
   width: 4px;
 }
+
 .scroll-thin-x::-webkit-scrollbar {
   height: 4px;
 }
+
 .scroll-thin-x::-webkit-scrollbar-track {
   background: transparent;
 }
