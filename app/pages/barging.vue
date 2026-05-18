@@ -37,7 +37,7 @@
                   <!-- divider -->
                   <div class="border-t border-muted my-4"></div>
                   <!-- 3 KPI sejajar -->
-                  <div class="grid grid-cols-3 gap-6">
+                  <div class="grid grid-cols-2 gap-6">
                     <button type="button" class="text-left group" @click="openBargeList('barging')">
                       <p class="text-xs text-muted-foreground group-hover:text-primary">
                         No. Barge
@@ -49,20 +49,20 @@
                         Click for detail →
                       </p>
                     </button>
-                    <div class="text-center">
+                    <div class="text-right">
                       <p class="text-xs text-muted-foreground">Avg MT</p>
                       <p class="text-xl font-semibold">
                         {{ formatShortNumber(statsBarging.avg_mt || 0) }}
                       </p>
                     </div>
 
-                    <div class="text-right">
+                    <!-- <div class="text-right">
                       <p class="text-xs text-muted-foreground">Loading Time</p>
                       <p class="text-xl font-semibold">
                         {{ statsBarging.avg_loading_time || 0 }}
                         <span class="text-xs text-muted-foreground">h</span>
                       </p>
-                    </div>
+                    </div> -->
                   </div>
 
                 </div>

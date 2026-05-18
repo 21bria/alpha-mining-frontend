@@ -1,7 +1,13 @@
 <template>
   <ClientOnly>
     <div>
-      <ApexChart ref="chart" height="270" type="bar" :options="mergedOptions" :series="series" />
+      <ApexChart
+        ref="chart" 
+        height="270" 
+        type="bar" 
+        :options="mergedOptions" 
+        :series="series" 
+       />
 
       <Dialog v-model:open="openDetail">
         <DialogContent class="w-[95vw] max-w-3xl max-h-[85vh] overflow-hidden">
@@ -243,10 +249,42 @@ const baseOptions = computed<ApexOptions>(() => ({
     }
   },
 
-  dataLabels: {
-    enabled: false,
-  },
+  // dataLabels: {
+  //   enabled: false,
+  // },
 
+  dataLabels: {
+    enabled: true,
+    formatter: (_val: number, opts: any) => {
+      const idx = opts.dataPointIndex
+      const seriesIndex = opts.seriesIndex
+
+      const detail = props.details?.[idx]
+      if (!detail) return ''
+
+      const total =
+        Number(detail.lim_actual || 0) + Number(detail.sap_actual || 0)
+
+      const bargeCount = detail.barges?.length || 0
+
+      // Supaya label hanya muncul 1x di atas stack terakhir
+      const isLastSeries = seriesIndex === props.series.length - 1
+      if (!isLastSeries) return ''
+
+      if (total <= 0) return ''
+
+      // return `${fmt(total)}\n(${bargeCount} barge)`
+      return `${bargeCount}`
+    },
+    style: {
+      fontSize: '11px',
+      fontWeight: 600,
+      // INI YANG PENTING
+      colors: [
+        isDark.value ? '#ffffff' : '#111827'
+      ]
+    },
+  },
   legend: {
     position: 'top',
     horizontalAlign: 'center',
@@ -284,35 +322,65 @@ const getThemeOptions = (): ApexOptions => ({
     }
   },
 
-  tooltip: {
-    theme: isDark.value ? 'dark' : 'light',
-    custom: function ({ dataPointIndex }: { dataPointIndex: number }) {
-      if (!props.details || !props.details[dataPointIndex]) return ''
+  // tooltip: {
+  //   theme: isDark.value ? 'dark' : 'light',
+  //   custom: function ({ dataPointIndex }: { dataPointIndex: number }) {
+  //     if (!props.details || !props.details[dataPointIndex]) return ''
 
-      const detail = props.details[dataPointIndex]
-      const total = Number(detail.lim_actual || 0) + Number(detail.sap_actual || 0)
+  //     const detail = props.details[dataPointIndex]
+  //     const total = Number(detail.lim_actual || 0) + Number(detail.sap_actual || 0)
 
-      return `
-        <div style="
-          padding:8px 10px;
-          width:180px;
-          font-size:12px;
-          color:${isDark.value ? '#eee' : '#222'};
-        ">
-          <div style="font-weight:700; margin-bottom:4px;">
-            ${detail.label}
-          </div>
-          <div>LIM: <strong>${fmt(detail.lim_actual)}</strong></div>
-          <div>SAP: <strong>${fmt(detail.sap_actual)}</strong></div>
-          <div>Total: <strong>${fmt(total)}</strong></div>
-          <div style="margin-top:6px; font-size:11px; opacity:.7;">
-            Click for details →
-          </div>
+  //     return `
+  //       <div style="
+  //         padding:8px 10px;
+  //         width:180px;
+  //         font-size:12px;
+  //         color:${isDark.value ? '#eee' : '#222'};
+  //       ">
+  //         <div style="font-weight:700; margin-bottom:4px;">
+  //           ${detail.label}
+  //         </div>
+  //         <div>LIM: <strong>${fmt(detail.lim_actual)}</strong></div>
+  //         <div>SAP: <strong>${fmt(detail.sap_actual)}</strong></div>
+  //         <div>Total: <strong>${fmt(total)}</strong></div>
+  //         <div style="margin-top:6px; font-size:11px; opacity:.7;">
+  //           Click for details →
+  //         </div>
+  //       </div>
+  //     `
+  //   }
+  // },
+tooltip: {
+  theme: isDark.value ? 'dark' : 'light',
+  custom: function ({ dataPointIndex }: { dataPointIndex: number }) {
+    if (!props.details || !props.details[dataPointIndex]) return ''
+
+    const detail = props.details[dataPointIndex]
+    const total = Number(detail.lim_actual || 0) + Number(detail.sap_actual || 0)
+
+    return `
+      <div style="
+        padding:8px 10px;
+        width:180px;
+        font-size:12px;
+        background:${isDark.value ? '#1f2937' : '#ffffff'};
+        color:${isDark.value ? '#f8fafc' : '#111827'};
+        border:1px solid ${isDark.value ? '#334155' : '#e5e7eb'};
+        border-radius:8px;
+      ">
+        <div style="font-weight:700; margin-bottom:4px;">
+          ${detail.label}
         </div>
-      `
-    }
-  },
-
+        <div>LIM: <strong>${fmt(detail.lim_actual)}</strong></div>
+        <div>SAP: <strong>${fmt(detail.sap_actual)}</strong></div>
+        <div>Total: <strong>${fmt(total)}</strong></div>
+        <div style="margin-top:6px; font-size:11px; opacity:.7;">
+          Click for details →
+        </div>
+      </div>
+    `
+  }
+},
   grid: {
     borderColor: isDark.value ? '#334155' : '#e5e7eb',
     strokeDashArray: 2
@@ -376,7 +444,7 @@ const mergedOptions = computed<ApexOptions>(() => ({
 
 watch(isDark, () => {
   if (chart.value?.updateOptions) {
-    chart.value.updateOptions(getThemeOptions(), false, true)
+    chart.value.updateOptions(mergedOptions.value, false, true, true)
   }
 })
 </script>

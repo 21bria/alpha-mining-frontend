@@ -15,7 +15,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { useChartFilterStore } from '@/stores/filters/chart-filter'
-import ChartScrollWrapper from '@/components/ui/apex-chart/ChartScrollWrapper.vue'
 import { defineAsyncComponent } from 'vue'
 import { useApi } from '@/composables/useApi'
 const props = defineProps<{
@@ -144,22 +143,6 @@ async function fetchChartData() {
 
     const data = await getApi<any>(endpoint, query)
 
-
-    // chartData.value = {
-    //   categories: data.summary.x_data ?? [],
-    //   series: [
-    //     {
-    //       name: 'Limonite',
-    //       type: props.chartType ?? defaultChartType.value,
-    //       data: data.summary.y_data_lim ?? []
-    //     },
-    //     {
-    //       name: 'Saprolite',
-    //       type: props.chartType ?? defaultChartType.value,
-    //       data: data.summary.y_data_sap ?? []
-    //     }
-    //   ]
-    // }
     chartData.value = {
       categories: data.summary.x_data ?? [],
       series: [
@@ -173,25 +156,8 @@ async function fetchChartData() {
           type: 'bar',
           data: data.summary.y_data_sap ?? []
         },
-        // {
-        //   name: 'LIM Plan',
-        //   type: 'line',
-        //   data: data.summary.y_plan_lim ?? []
-        // },
-        // {
-        //   name: 'SAP Plan',
-        //   type: 'line',
-        //   data: data.summary.y_plan_sap ?? []
-        // },
-        // {
-        //   name: 'Total Plan',
-        //   type: 'line',
-        //   data: data.summary.y_plan_total ?? []
-        // }
       ]
     }
-
-
 
     // Simpan details untuk tabel atau tooltip
     detailsData.value = data.details ?? []
@@ -216,6 +182,7 @@ watch(
   { immediate: true }
 )
 </script>
+
 <style scoped>
 .chart-mask {
   width: 100%;

@@ -1,13 +1,15 @@
-<!-- <template>
-  <component :is="chartComponent" v-if="chartData" :series="chartData.series" :categories="chartData.categories"
-    :colors="colors" />
-</template> -->
+
 <template>
   <div class="chart-mask" :class="{ scrollable: isScrollable }">
-    <component :is="chartComponent" v-if="chartData" :series="chartData.series" :categories="chartData.categories"
-      :colors="colors" />
+    <component
+     :is="chartComponent" 
+     v-if="chartData" 
+     :series="chartData.series" 
+    :categories="chartData.categories"
+    :colors="colors" />
   </div>
 </template>
+
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useChartFilterStore } from '@/stores/filters/chart-filter'

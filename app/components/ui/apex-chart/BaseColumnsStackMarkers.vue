@@ -1,7 +1,13 @@
 <template>
   <ClientOnly>
     <div>
-      <ApexChart ref="chart" height="270" :options="mergedOptions" :series="series" />
+      <ApexChart
+      ref="chart"
+      height="270"
+      type="bar"
+      :options="mergedOptions"
+      :series="props.series"
+    />
 
       <Dialog v-model:open="openDetail">
         <DialogContent class="w-[95vw] max-w-3xl max-h-[85vh] overflow-hidden">
@@ -87,7 +93,7 @@
 <script setup lang="ts">
 import ApexChart from 'vue3-apexcharts'
 import type { ApexOptions } from 'apexcharts'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import {
   Dialog,
   DialogContent,
@@ -115,6 +121,7 @@ const colorMode = useColorMode()
 const isDark = computed(() => colorMode.value === 'dark')
 
 const openDetail = ref(false)
+
 
 interface Barge {
   barge_code?: string
@@ -152,8 +159,6 @@ const bargesSorted = computed(() => {
     .filter((b) => (b.total ?? 0) > 0)
     .sort((a, b) => (b.total ?? 0) - (a.total ?? 0))
 })
-
-
 
 const baseOptions = computed<ApexOptions>(() => ({
   chart: {
@@ -224,14 +229,31 @@ const baseOptions = computed<ApexOptions>(() => ({
       color: isDark.value ? '#334155' : '#e5e7eb'
     }
   },
-  yaxis: {
-    labels: {
-      formatter: (val: number) => `${(val / 1000).toFixed(1)}k`,
-      style: {
-        colors: isDark.value ? '#e5e7eb' : '#1e293b'
-      }
+  // yaxis: {
+  //   labels: {
+  //     formatter: (val: number) => `${(val / 1000).toFixed(1)}k`,
+  //     style: {
+  //       colors: isDark.value ? '#e5e7eb' : '#1e293b'
+  //     }
+  //   }
+  // },
+yaxis: {
+  tickAmount: 4,
+  decimalsInFloat: 0,
+
+  labels: {
+    formatter: (val: number) => {
+      return new Intl.NumberFormat('en', {
+        notation: 'compact',
+        maximumFractionDigits: 0
+      }).format(val)
+    },
+
+    style: {
+      colors: isDark.value ? '#e5e7eb' : '#1e293b'
     }
-  },
+  }
+},
   stroke: {
     width: props.series.length > 0
       ? Array(props.series.length - 1).fill(0).concat(0)
@@ -264,27 +286,27 @@ const baseOptions = computed<ApexOptions>(() => ({
   fill: {
     opacity: [0.67],
   },
+  
   tooltip: {
     theme: isDark.value ? 'dark' : 'light',
-    custom: function ({
-      seriesIndex,
-      dataPointIndex,
-      w
-    }: {
-      seriesIndex: number
-      dataPointIndex: number
-      w: any
-    }) {
+    custom: function ({ seriesIndex, dataPointIndex, w }) {
       const point: any = w.config.series?.[seriesIndex]?.data?.[dataPointIndex]
       const detail = point?.detail
       if (!detail) return ''
+
+      const bg = isDark.value ? '#1f2937' : '#ffffff'
+      const text = isDark.value ? '#f8fafc' : '#111827'
+      const border = isDark.value ? '#334155' : '#e5e7eb'
 
       return `
       <div style="
         padding:8px 10px;
         width:180px;
         font-size:12px;
-        color:${isDark.value ? '#eee' : '#222'};
+        background:${bg};
+        color:${text};
+        border:1px solid ${border};
+        border-radius:8px;
       ">
         <div style="font-weight:700; margin-bottom:4px;">
           ${detail.label}
@@ -336,9 +358,10 @@ const mergedOptions = computed<ApexOptions>(() => ({
   ...getThemeOptions()
 }))
 
+
 watch(isDark, () => {
   if (chart.value?.updateOptions) {
-    chart.value.updateOptions(getThemeOptions(), false, true)
+    chart.value.updateOptions(mergedOptions.value, false, true, true)
   }
 })
 </script>

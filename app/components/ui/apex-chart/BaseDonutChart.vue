@@ -1,11 +1,6 @@
 <template>
   <ClientOnly>
-    <ApexChart
-      type="donut"
-      :options="options"
-      :series="props.series"
-      :width="props.width"
-    />
+    <ApexChart type="donut" :options="options" :series="props.series" :width="props.width" />
   </ClientOnly>
 </template>
 
@@ -76,6 +71,13 @@ const options = computed<ApexOptions>(() => ({
   fill: {
     opacity: 0.9,
   },
+tooltip: {
+  y: {
+    formatter: (val: number) => {
+      return formatNumberShort(val)
+    }
+  }
+},
   plotOptions: {
     pie: {
       expandOnClick: false,
