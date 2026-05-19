@@ -45,7 +45,7 @@ export type ProductionPayload = {
   status_dome: string | null
   sale_adjust: number | null
   remarks: string | null
-  category: number | null
+  category: string | null
   direct: string | null
   no_production: string | null
 }
@@ -616,7 +616,7 @@ async function fetchCategories(q = "", page = 1) {
         page,
         page_size: 10,
         ...(local.value.iup ? { iup_id: local.value.iup } : {}),
-        value_key: "id",
+        value_key: "category",
         label_key: "category",
       },
     })
@@ -861,7 +861,7 @@ function submit() {
     status_dome: local.value.status_dome || null,
     sale_adjust: toNumberOrNull(local.value.sale_adjust),
     remarks: local.value.remarks.trim() || null,
-    category: toNumberOrNull(local.value.category),
+    category: local.value.category || null,
     direct: local.value.direct ? "Yes" : "No",
     no_production: local.value.no_production.trim() || null,
   }

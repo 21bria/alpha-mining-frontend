@@ -61,7 +61,7 @@ type ProductionPayload = {
   status_dome: string | null
   sale_adjust: number | null
   remarks: string | null
-  category: number | null
+  category: string | null
   direct: string | null
   no_production: string | null
 }
@@ -266,11 +266,17 @@ async function submitBulk(payload: ProductionPayload[]) {
     await refresh()
     await loadSummary()
   } catch (e: any) {
-    notify.error(
+    // notify.error(
+    //   e?.data?.detail ||
+    //   e?.message ||
+    //   "Failed bulk create"
+    // )
+    bulkError.value =
+      e?.data?.[0]?.increment?.[0] ||
+      e?.data?.increment?.[0] ||
       e?.data?.detail ||
       e?.message ||
       "Failed bulk create"
-    )
   } finally {
     formLoading.value = false
   }
@@ -448,7 +454,7 @@ watch(query, () => {
 onMounted(() => {
   loadSummary()
 })
-
+const bulkError = ref("")
 </script>
 
 <template>
@@ -530,12 +536,13 @@ onMounted(() => {
       @submit="submit" 
       />
 
-      <OreBulkEntryDialog
-        v-model:open="bulkDialogOpen"
-        :loading="formLoading"
-        :role="currentRole"
-        @submit="submitBulk"
-      />
+    <OreBulkEntryDialog
+      v-model:open="bulkDialogOpen"
+      :loading="formLoading"
+      :role="currentRole"
+      :error-message="bulkError"
+      @submit="submitBulk"
+    />
 
     <DeleteRangeDialog
       v-model:open="openRangeDelete"

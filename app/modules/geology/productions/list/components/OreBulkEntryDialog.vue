@@ -5,7 +5,6 @@ import { useApi } from "@/composables/useApi"
 type UserRole = "SYSTEM" | "MANAGEMENT" | "GLOBAL_VIEWER" | "SITE_USER"
 
 
-
 type LookupOption = {
   value: string
   label: string
@@ -65,6 +64,7 @@ const props = defineProps<{
   role: UserRole
   fixedIup?: number | null
   fixedIupLabel?: string | null
+  errorMessage?: string
 }>()
 
 const emit = defineEmits<{
@@ -544,7 +544,12 @@ const canSubmit = computed(() => {
   )
 })
 
+const submitError = ref("")
+
 function submit() {
+
+  submitError.value = ""
+
   const payload = rows.value
     .filter(row =>
       (!requiresIup.value || row.iup) &&
@@ -995,7 +1000,14 @@ function submit() {
         </Table>
       </div>
 
-      <DialogFooter class="shrink-0 pt-2">
+      <DialogFooter class="shrink-0 pt-2 flex items-center gap-3">
+        <div
+          v-if="props.errorMessage"
+          class="mr-auto rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600"
+        >
+          {{ props.errorMessage }}
+        </div>
+
         <Button variant="secondary" @click="addRow">
           Add Row
         </Button>
