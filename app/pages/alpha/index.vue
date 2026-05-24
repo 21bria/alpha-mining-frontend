@@ -1,0 +1,450 @@
+<script setup>
+import { marked } from 'marked'
+import { useApi } from "@/composables/useApi"
+
+const { request, rawRequest } = useApi()
+
+const message = ref('')
+const loading = ref(false)
+const messages = ref([])
+const sessionId = ref(null)
+
+const HEAVY_KEYWORDS = [
+  'kenapa',
+  'root cause',
+  'operational',
+  'cross domain',
+  'forecast',
+  'prediction',
+  'anomaly',
+  'downtime',
+  'analisa operasional',
+  'export',
+  'pdf',
+]
+
+const isHeavyMessage = (text = '') => {
+  const clean = text.toLowerCase()
+  return HEAVY_KEYWORDS.some(k => clean.includes(k))
+}
+
+const formatAiText = (text = '') => {
+  const lines = text.split('\n')
+
+  return lines.map(line => {
+    const clean = line.trim()
+
+    const isHeading =
+      clean.length < 40 &&
+      !clean.endsWith('.') &&
+      !clean.includes(':') &&
+      /^[A-Za-z0-9\s\-&]+$/.test(clean)
+
+    return isHeading ? `## ${clean}` : line
+  }).join('\n')
+}
+
+const pollTask = async (taskId) => {
+  const timer = setInterval(async () => {
+    try {
+      const res = await request(`/api/analytics/raw/ai/task/${taskId}/`)
+
+      if (res.status === 'SUCCESS') {
+        messages.value = messages.value.filter(msg => msg.taskId !== taskId)
+
+        messages.value.push({
+          role: 'assistant',
+          text: res.result || ''
+        })
+
+        loading.value = false
+        clearInterval(timer)
+      }
+
+      if (res.status === 'FAILURE') {
+        messages.value = messages.value.filter(msg => msg.taskId !== taskId)
+
+        messages.value.push({
+          role: 'assistant',
+          text: 'Generate report gagal.'
+        })
+
+        loading.value = false
+        clearInterval(timer)
+      }
+    } catch (err) {
+      console.error(err)
+
+      messages.value = messages.value.filter(msg => msg.taskId !== taskId)
+
+      messages.value.push({
+        role: 'assistant',
+        text: 'Error ambil result AI.'
+      })
+
+      loading.value = false
+      clearInterval(timer)
+    }
+  }, 2000)
+}
+
+const sendMessageAsync = async () => {
+  const userText = message.value
+
+  messages.value.push({
+    role: 'user',
+    text: userText
+  })
+
+  message.value = ''
+  loading.value = true
+
+  try {
+    const res = await request('/api/analytics/raw/ai/chat/', {
+      method: 'POST',
+      body: {
+        message: userText,
+        session_id: sessionId.value,
+        iup_id: 1,
+        language: 'id'
+      }
+    })
+
+    if (res.session_id) {
+      sessionId.value = res.session_id
+    }
+
+    if (res.direct_reply) {
+      messages.value.push({
+        role: 'assistant',
+        text: res.message || ''
+      })
+
+      loading.value = false
+      return
+    }
+
+    messages.value.push({
+      role: 'assistant',
+      text: '',
+      loading: true,
+      taskId: res.task_id
+    })
+
+    pollTask(res.task_id)
+  } catch (err) {
+    console.error(err)
+
+    messages.value.push({
+      role: 'assistant',
+      text: 'Gagal mengirim request AI.'
+    })
+
+    loading.value = false
+  }
+}
+
+const sendMessageStream = async () => {
+  const userText = message.value
+
+  messages.value.push({
+    role: 'user',
+    text: userText
+  })
+
+  const assistantMsg = {
+    role: 'assistant',
+    text: '',
+    streaming: true
+  }
+
+  messages.value.push(assistantMsg)
+
+  message.value = ''
+  loading.value = true
+
+  try {
+    const res = await rawRequest('/api/analytics/raw/ai/chat-stream/', {
+      method: 'POST',
+      body: {
+        message: userText,
+        session_id: sessionId.value,
+        iup_id: 1,
+        language: 'id'
+      }
+    })
+
+    if (!res.ok || !res.body) {
+      throw new Error('Streaming response tidak tersedia.')
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+
+      const parts = buffer.split('\n\n')
+      buffer = parts.pop() || ''
+
+      for (const part of parts) {
+        if (!part.startsWith('data:')) continue
+
+        const jsonStr = part.replace('data:', '').trim()
+        if (!jsonStr) continue
+
+        const payload = JSON.parse(jsonStr)
+
+        if (payload.session_id) {
+          sessionId.value = payload.session_id
+        }
+
+        if (payload.text) {
+          assistantMsg.text += payload.text
+        }
+
+        if (payload.error) {
+          assistantMsg.text = payload.error || 'Streaming AI error.'
+          loading.value = false
+          return
+        }
+
+        if (payload.done) {
+          assistantMsg.streaming = false
+          loading.value = false
+          return
+        }
+      }
+    }
+
+    loading.value = false
+  } catch (err) {
+    console.error(err)
+
+    assistantMsg.text = 'Gagal streaming AI.'
+    loading.value = false
+  }
+}
+
+const sendMessage = async () => {
+  if (!message.value.trim() || loading.value) return
+
+  if (isHeavyMessage(message.value)) {
+    return sendMessageAsync()
+  }
+
+  return sendMessageStream()
+}
+
+const newChat = () => {
+  sessionId.value = null
+  messages.value = []
+  message.value = ''
+  loading.value = false
+}
+</script>
+
+<template>
+  <div class="min-h-screen bg-background text-foreground flex flex-col">
+
+    <!-- HEADER -->
+    <div class="pt-14 pb-10 text-center px-6">
+      <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full
+        bg-gradient-to-r from-orange-500/15 to-amber-400/10
+        border border-orange-400/20 backdrop-blur-md">
+        <div class="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse" />
+
+        <span class="font-semibold tracking-wide text-orange-500">
+          Alpha Assistant
+        </span>
+      </div>
+
+      <h1 class="text-5xl font-bold tracking-tight mt-6
+        bg-gradient-to-r from-foreground to-foreground/70
+        bg-clip-text text-transparent">
+        How can I help you today?
+      </h1>
+
+      <p class="text-muted-foreground mt-3 text-lg
+        max-w-2xl mx-auto leading-8">
+        AI-powered operational analysis for production, inventory, quality, equipment, fuel, weather, and mining performance.
+      </p>
+
+    </div>
+
+    <!-- CHAT -->
+    <div class="flex-1 overflow-y-auto px-6 pb-8">
+      <div class="w-full max-w-5xl mx-auto space-y-6">
+        <div v-for="(msg, index) in messages" :key="index" class="w-full">
+          <!-- USER -->
+          <div v-if="msg.role === 'user'" class="flex justify-end">
+            <div class="max-w-2xl
+              rounded-3xl px-5 py-4
+              bg-muted border border-border
+              shadow-sm">
+
+              <div class="text-[15px] leading-8 text-foreground">
+                {{ msg.text }}
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ASSISTANT -->
+          <div v-else class="w-full">
+            <!-- HEADER -->
+            <div class="flex items-center gap-3 mb-4">
+             <div class="w-11 h-11 rounded-2xl
+                  bg-gradient-to-br
+                  from-orange-500 to-amber-400
+                  flex items-center justify-center
+                  shadow-lg shadow-orange-500/20">
+                <span class="font-bold text-black text-lg">
+                  A
+                </span>
+              </div>
+
+              <div>
+                <div class="font-semibold text-foreground">
+                  Alpha Assistant
+                </div>
+                <div class="text-xs text-muted-foreground">
+                  Mining Operational Intelligence
+                </div>
+              </div>
+
+            </div>
+
+            <!-- BODY -->
+            <div class="w-full">
+              <!-- LOADING -->
+              <div v-if="msg.loading || msg.streaming && !msg.text" class="flex items-center
+               gap-2 text-muted-foreground">
+                <span class="h-2 w-2 rounded-full bg-orange-400 animate-bounce" />
+                <span class="h-2 w-2 rounded-full bg-orange-400 animate-bounce delay-150" />
+                <span class="h-2 w-2 rounded-full bg-orange-400 animate-bounce delay-300" />
+                <span class="ml-2">
+                  Analyzing operational data...
+                </span>
+              </div>
+              <!-- RESULT -->
+              <div v-else class="ai-response" v-html="marked(
+                msg.role === 'assistant'
+                  ? formatAiText(msg.text)
+                  : msg.text
+              )" />
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- INPUT -->
+    <div class="flex-1 overflow-y-auto px-6 pb-6 pt-2
+            bg-gradient-to-t
+            from-background via-background/95
+            to-transparent
+            backdrop-blur-xl
+        ">
+
+      <div class="w-full max-w-5xl mx-auto space-y-6
+        rounded-3xl border border-border
+        bg-card shadow-xl">
+
+        <textarea v-model="message" rows="3" class="w-full bg-transparent outline-none resize-none
+          text-foreground placeholder:text-muted-foreground
+          px-5 pt-5" placeholder="Ask Alpha Assistant about mining operational analysis..."
+          @keydown.enter.prevent="sendMessage" />
+
+        <div class="flex items-center justify-between
+          px-5 py-4">
+
+          <div class="text-sm text-muted-foreground">
+            AI-powered Mining Intelligence
+          </div>
+
+          <div class="flex items-center gap-3">
+
+            <!-- NEW CHAT -->
+            <button class="px-4 py-2 rounded-2xl
+              border border-border
+              text-sm text-muted-foreground
+              hover:bg-muted transition" @click="newChat">
+              New Chat
+            </button>
+
+            <!-- SEND -->
+            <button class="w-12 h-12 rounded-2xl
+              bg-gradient-to-br from-orange-500 to-amber-400
+              text-black font-bold
+              flex items-center justify-center
+              shadow-lg shadow-orange-500/20
+              hover:scale-105 transition-all
+              disabled:opacity-50" :disabled="loading" @click="sendMessage">
+              {{ loading ? '...' : '↑' }}
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+  </div>
+</template>
+
+
+
+<style scoped>
+.ai-response :deep(h2) {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.85rem;
+  color: hsl(var(--foreground));
+}
+
+.ai-response :deep(p) {
+  margin-bottom: 1rem;
+  line-height: 1.9;
+  color: hsl(var(--foreground));
+}
+
+.ai-response :deep(ul) {
+  padding-left: 1.5rem;
+  list-style: disc;
+  margin-bottom: 1rem;
+}
+
+.ai-response :deep(li) {
+  margin-bottom: 0.45rem;
+  color: hsl(var(--foreground));
+}
+
+.ai-response :deep(strong) {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+.ai-response :deep(code) {
+  background: hsl(var(--muted));
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: rgb(249 115 22);
+}
+
+.ai-response :deep(hr) {
+  border-color: hsl(var(--border));
+  margin: 1.5rem 0;
+}
+</style>

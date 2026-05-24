@@ -93,6 +93,7 @@ onMounted(() => {
 
   <div class="mt-4 text-center text-sm text-muted-foreground">
     Don't have an account?
-    <NuxtLink to="/register" class="underline">Sign up</NuxtLink>
+    <!-- <NuxtLink to="/register" class="underline">Sign up</NuxtLink> -->
+    <NuxtLink to="/#" class="underline">Sign up</NuxtLink>
   </div>
 </template>

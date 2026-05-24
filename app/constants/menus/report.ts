@@ -160,6 +160,12 @@ export const menusReport: NavMenu[] = [
         new: false,
         link: '/report/export-coa',
       },
+      {
+        title: 'Weekly BOD',
+        icon: 'i-lucide-activity',
+        new: true,
+        link: '/report/bod',
+      },
     ],
   },
 

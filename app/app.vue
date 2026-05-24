@@ -13,9 +13,22 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1' },
     { key: 'theme-color', name: 'theme-color', content: color },
   ],
+  // link: [
+  //   { rel: 'icon', href: '/favicon.ico' },
+  // ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' },
-  ],
+  {
+    rel: 'icon',
+    type: 'image/png',
+    sizes: '32x32',
+    href: '/alpha.png'
+  },
+  {
+    rel: 'apple-touch-icon',
+    sizes: '180x180',
+    href: '/alpha.png'
+  }
+],
   htmlAttrs: {
     lang: 'en',
   },

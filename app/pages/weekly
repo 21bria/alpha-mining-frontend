@@ -1,0 +1,304 @@
+<script setup lang="ts">
+import NumberFlow from '@number-flow/vue'
+import { TrendingDown, TrendingUp, TrendingUpIcon } from 'lucide-vue-next'
+import { ChevronDown, ExternalLink } from 'lucide-vue-next'
+import FilterControls from '@/components/filters/FilterWeekly.vue'
+
+const documents = ref([
+  {
+    title: "Weekly BOD Report",
+    date: "MAY 19, 2026",
+    fileName: "Mining & Barging Weekly Report",
+    open: true,
+  },
+  {
+    title: "Sustainability Policy",
+    date: "DECEMBER 17, 2023",
+    fileName: "Sustainability Policy",
+    open: false,
+  },
+  {
+    title: "HSE Performance Attachment",
+    date: "MAY 19, 2026",
+    fileName: "HSE & Fleet Performance Report",
+    open: false,
+  },
+  {
+    title: "Manpower Summary Attachment",
+    date: "MAY 19, 2026",
+    fileName: "Manpower Summary Detail",
+    open: false,
+  },
+])
+
+
+const summaryCards = ref([
+  {
+    value: 738,
+    suffix: "%",
+    title: "Production",
+    desc: "36,914 vs 5,000 WMT plan",
+  },
+  {
+    value: 0,
+    suffix: "",
+    title: "HSE Incidents",
+    desc: "Zero incidents this week",
+  },
+  {
+    value: 418,
+    suffix: "K",
+    title: "Inventory",
+    desc: "@ 1.39% Ni — 16 stockpile locations",
+  },
+  {
+    value: 28,
+    suffix: "K",
+    title: "WMT Barging",
+    desc: "71% of 40K plan",
+  },
+])
+
+const miningRows = ref([
+  { material: "Ore (LIM+SAP)", plan: 3000, actual: 18083, achievement: 603, status: "▲" },
+  { material: "Waste (TS+OB+Q)", plan: 2000, actual: 18831, achievement: 942, status: "▲" },
+  { material: "SUB-TOTAL", plan: 5000, actual: 36914, achievement: 738, status: "738% ▲", bold: true },
+  { material: "BARGING (WTD)", plan: 40000, actual: 28317, achievement: 71, status: "▼" },
+  { material: "TOTAL", plan: 45000, actual: 65231, achievement: 145, status: "145% ▲", bold: true },
+])
+
+const fleetCards = ref([
+  { value: 0, title: "Incidents", desc: "Fatality / LTI / MTI" },
+  { value: 334, title: "Site POB", desc: "Total Manpower On Board" },
+  { value: 60.3, suffix: "h", title: "EWH Actual", desc: "Mining 38.6h + Barging 21.6h" },
+])
+
+function formatNumber(v: number) {
+  return new Intl.NumberFormat("en-US").format(v)
+}
+
+function toggleDocument(index: number) {
+  const doc = documents.value[index]
+
+  if (!doc)
+    return
+
+  doc.open = !doc.open
+}
+
+</script>
+
+<template>
+  <div class="relative min-h-[calc(100vh-56px)] w-full overflow-hidden px-14 lg:px-14">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-2xl font-bold tracking-tight">
+        Operations Scorecard
+      </h2>
+      <div class="flex items-center space-x-2">
+       <FilterControls @apply="handleApply" />
+      </div>
+    </div>
+    <main class="@container/main flex flex-1 flex-col gap-4 md:gap-6 mt-6">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card v-for="card in summaryCards" :key="card.title" class="bg-primary text-primary-foreground overflow-hidden">
+          <CardHeader class="p-5">
+            <CardTitle class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span class="text-4xl font-bold leading-none sm:text-5xl">
+                <NumberFlow :value="card.value" />
+              </span>
+
+              <span class="text-3xl font-bold leading-none sm:text-4xl">
+                {{ card.suffix }}
+              </span>
+
+              <span class="min-w-0 break-words text-xl font-medium leading-tight">
+                {{ card.title }}
+              </span>
+            </CardTitle>
+
+            <CardDescription class="mt-2 break-words text-base leading-snug text-primary-foreground/80">
+              {{ card.desc }}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>MINING & BARGING — WEEK 19</CardTitle>
+        </CardHeader>
+
+        <CardContent class="p-0">
+          <div class="overflow-x-auto">
+            <table class="min-w-[700px] w-full text-sm">
+              <thead class="bg-muted">
+                <tr>
+                  <th class="p-3 text-left">Material</th>
+                  <th class="p-3 text-right">Weekly Plan (WMT)</th>
+                  <th class="p-3 text-right">Actual (WMT)</th>
+                  <th class="p-3 text-right">Achievement</th>
+                  <th class="p-3 text-center">Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr v-for="row in miningRows" :key="row.material" :class="row.bold ? 'bg-muted/60 font-bold' : ''">
+                  <td class="p-3 whitespace-nowrap">
+                    {{ row.material }}
+                  </td>
+
+                  <td class="p-3 text-right whitespace-nowrap">
+                    {{ formatNumber(row.plan) }}
+                  </td>
+
+                  <td class="p-3 text-right whitespace-nowrap">
+                    {{ formatNumber(row.actual) }}
+                  </td>
+
+                  <td class="p-3 text-right text-green-600 whitespace-nowrap">
+                    {{ row.achievement }}%
+                  </td>
+
+                  <td class="p-3 text-center text-green-700 whitespace-nowrap">
+                    {{ row.status }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div class="grid grid-cols-12 gap-5 pt-2">
+
+        <!-- HSE -->
+        <div class="col-span-12 xl:col-span-7">
+          <div class="overflow-hidden rounded-xl border border-border/60 bg-background">
+
+            <div class="flex items-center bg-primary px-6 py-4 text-primary-foreground">
+              <h2 class="text-xl font-semibold leading-none">
+                HSE & FLEET PERFORMANCE
+              </h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 p-5 md:grid-cols-3">
+              <div v-for="card in fleetCards" :key="card.title" class="
+                rounded-2xl
+                bg-primary
+                px-6 py-8
+                text-center
+                text-primary-foreground
+              ">
+                <div class="text-3xl font-bold">
+                  <NumberFlow :value="card.value" />
+                  <span>{{ card.suffix }}</span>
+                </div>
+
+                <div class="mt-5 text-xl">
+                  {{ card.title }}
+                </div>
+
+                <div class="mt-2 text-sm text-primary-foreground/80">
+                  {{ card.desc }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MANPOWER -->
+        <div class="col-span-12 xl:col-span-5">
+          <div class="overflow-hidden rounded-xl border border-border/60 bg-background">
+
+            <div class="flex items-center bg-primary px-6 py-4 text-primary-foreground">
+              <h2 class="text-xl font-semibold leading-none">
+                MANPOWER SUMMARY
+              </h2>
+            </div>
+
+            <div class="space-y-4 p-6 text-lg">
+              <div class="flex items-start justify-between gap-3">
+                <span class="text-muted-foreground">PT. KAWI</span>
+                <span class="font-semibold">79</span>
+              </div>
+
+              <div class="flex items-start justify-between gap-3">
+                <span class="text-muted-foreground">PT. NPM</span>
+                <span class="font-semibold">222</span>
+              </div>
+
+              <div class="flex items-start justify-between gap-3">
+                <span class="text-muted-foreground">PT. MKI</span>
+                <span class="font-semibold">10</span>
+              </div>
+
+              <div class="flex items-start justify-between gap-3">
+                <span class="text-muted-foreground">Others</span>
+                <span class="font-semibold">24</span>
+              </div>
+
+              <div class="flex items-start justify-between gap-3">
+                <span class="font-semibold"> Man-Hours</span>
+                <span class="font-semibold">52,088</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Documents -->
+      <div class="grid grid-cols-12 gap-5 pt-2">
+        <div class="col-span-12 xl:col-span-7">
+
+          <div class="rounded-xl border bg-background shadow-sm overflow-hidden">
+            <div class="flex items-center bg-primary px-6 py-4 text-primary-foreground">
+              <h2 class="text-xl font-semibold leading-none">
+                DOCUMENTS & ATTACHMENTS
+              </h2>
+            </div>
+
+            <div class="divide-y divide-border/60">
+              <div v-for="(doc, index) in documents" :key="doc.title" class="transition-colors hover:bg-muted/20">
+                <button type="button" class="flex w-full items-center justify-between px-6 py-4 text-left"
+                  @click="toggleDocument(index)">
+                  <span class="text-lg font-semibold text-foreground">
+                    {{ doc.title }}
+                  </span>
+
+                  <ChevronDown class="h-5 w-5 transition-transform text-primary"
+                    :class="doc.open ? 'rotate-180' : ''" />
+                </button>
+
+                <div v-if="doc.open" class="px-6 pb-5">
+                  <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                    {{ doc.date }}
+                  </p>
+
+                  <div class="mt-2 flex items-center justify-between gap-4">
+                    <div>
+                      <p class="text-base font-semibold">
+                        {{ doc.fileName }}
+                      </p>
+
+                      <p class="text-sm text-muted-foreground">
+                        PDF Document • Weekly Board Report
+                      </p>
+                    </div>
+
+                    <Button variant="outline" size="icon">
+                      <ExternalLink class="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+</template>

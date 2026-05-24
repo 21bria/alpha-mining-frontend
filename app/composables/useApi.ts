@@ -22,19 +22,6 @@ export function useApi() {
     )
   }
 
-  // const buildUrl = (path: string, query?: Record<string, any>) => {
-  //   const qs = new URLSearchParams(
-  //     Object.entries(cleanQuery(query)).reduce((acc, [key, value]) => {
-  //       acc[key] = String(value)
-  //       return acc
-  //     }, {} as Record<string, string>)
-  //   ).toString()
-
-  //   const normalizedBase = String(baseURL || "").replace(/\/$/, "")
-  //   const normalizedPath = path.startsWith("/") ? path : `/${path}`
-
-  //   return `${normalizedBase}${normalizedPath}${qs ? `?${qs}` : ""}`
-  // }
 
   const buildUrl = (path: string, query?: Record<string, any>) => {
     const qs = new URLSearchParams(
@@ -107,5 +94,45 @@ export function useApi() {
     }
   }
 
-  return { request, buildUrl, cleanQuery }
+  const rawRequest = async (
+    path: string,
+    opts: RequestOpts = {}
+  ): Promise<Response> => {
+    if (import.meta.client && !auth.access && !auth.refresh) {
+      auth.loadFromStorage()
+    }
+
+    const doFetch = (accessToken?: string) => {
+      return fetch(buildUrl(path, opts.query), {
+        method: opts.method ?? "GET",
+        body: opts.body ? JSON.stringify(opts.body) : undefined,
+        headers: {
+          "Content-Type": "application/json",
+          ...(opts.headers ?? {}),
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      })
+    }
+
+    let res = await doFetch(auth.access)
+
+    if (res.status === 401 && auth.refresh) {
+      try {
+        const newAccess = await auth.refreshToken()
+        res = await doFetch(newAccess)
+      } catch (refreshError) {
+        auth.clear()
+
+        if (import.meta.client) {
+          await navigateTo("/login")
+        }
+
+        throw refreshError
+      }
+    }
+
+    return res
+  }
+
+  return { request, rawRequest, buildUrl, cleanQuery }
 }

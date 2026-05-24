@@ -25,7 +25,15 @@ const navMenu = computed(() => filterNavMenu(navMenuRaw, userPerms.value))
 // bottom juga difilter (kasih require di menu bawah)
 const navMenuBottom = computed(() => filterNavMenuItems(navMenuBottomRaw as any, userPerms.value))
 
-const teams = [{ name: "Alpha Apps.", logo: "i-lucide-map-pin-check", plan: "Mining-Dashboard" }]
+// const teams = [{ name: "Alpha Apps.", logo: "i-lucide-map-pin-check", plan: "Mining-Dashboard" }]
+
+const teams = [
+  {
+    name: "Alpha Apps.",
+    logo: "/alpha.png",
+    plan: "Mining Intelligence"
+  }
+]
 
 const user = computed(() => {
   const profile = auth.user?.profile

@@ -64,11 +64,11 @@
               <div class="relative z-10 flex h-full flex-col justify-between gap-6">
                 <div>
                   <p class="text-xs font-medium uppercase tracking-[0.25em] text-orange-400">
-                    Mining ERP Dashboard
+                    Mining Intelligence Platform
                   </p>
 
                   <h1 class="mt-4 max-w-md text-3xl font-bold leading-tight text-white">
-                    Monitor production, quality, inventory, and reports in one workspace.
+                    AI-powered monitoring and operational analysis for production, quality, inventory, and reports in one workspace.
                   </h1>
 
                   <p class="mt-4 max-w-lg text-sm leading-6 text-slate-400">
@@ -91,13 +91,14 @@
       <h1 class="translate-y-8 select-none whitespace-nowrap text-center text-[110px] font-extrabold tracking-tight
            text-gray-900/5 dark:text-white/[0.035]
            md:text-[150px] xl:text-[180px]">
-        Mine Dashboard
+         Hallo Alpha
       </h1>
 
       <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
 import { watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -122,12 +123,13 @@ watch(
 )
 
 import {
-  FileSliders,
   TrendingUp,
   ChartScatter,
   Settings2,
   ChartPie,
-  ChartNetwork
+  ChartNetwork,
+  MessageCircleCode,
+  FileCheck
 } from 'lucide-vue-next'
 
 
@@ -182,13 +184,30 @@ const appMenus: AppMenuItem[] = [
     icon: TrendingUp,
     iconClass: 'bg-gradient-to-br from-amber-400 to-yellow-600'
   },
+  // {
+  //   key: 'compile',
+  //   label: 'Compile',
+  //   description: 'Automatic summaries',
+  //   path: '/report/compile',
+  //   icon: FileSliders,
+  //   iconClass: 'bg-gradient-to-br from-red-400 to-red-600'
+  // },
   {
-    key: 'compile',
-    label: 'Compile',
-    description: 'Automatic summaries',
-    path: '/report/compile',
-    icon: FileSliders,
+    key: 'weekly',
+    label: 'Weekly',
+    description: 'Weekly management',
+    path: '/weekly',
+    icon: FileCheck,
     iconClass: 'bg-gradient-to-br from-red-400 to-red-600'
+  },
+
+  {
+    key: 'alpha-hallo',
+    label: 'Alpha',
+    description: 'Alpha assistant',
+    path: '/alpha',
+    icon: MessageCircleCode,
+    iconClass: 'bg-gradient-to-br from-cyan-400 to-cyan-600'
   }
 ]
 
@@ -230,7 +249,18 @@ function buildActiveQuery() {
   return cleanQuery(query)
 }
 
+
 // function openAppMenu(item: AppMenuItem) {
+//   const role = auth.user?.role
+
+//   if (
+//     ['SYSTEM','MANAGEMENT', 'GLOBAL_VIEWER'].includes(role || '') &&
+//     !chartFilter.iup_id
+//   ) {
+//     toast.warning('Please select IUP first')
+//     return
+//   }
+
 //   router.push({
 //     path: item.path,
 //     query: buildActiveQuery()
@@ -239,10 +269,25 @@ function buildActiveQuery() {
 function openAppMenu(item: AppMenuItem) {
   const role = auth.user?.role
 
+  // Alpha sementara private
   if (
-    ['SYSTEM','MANAGEMENT', 'GLOBAL_VIEWER'].includes(role || '') &&
-    !chartFilter.iup_id
+    item.key === 'alpha-hallo' &&
+    !['SYSTEM', 'MANAGEMENT'].includes(role || '')
   ) {
+    toast.warning('Alpha Assistant is currently in management preview.')
+    return
+  }
+
+  const skipIupRequired = [
+    'alpha-hallo'
+  ].includes(item.key)
+
+  const needIup =
+    !skipIupRequired &&
+    ['SYSTEM', 'MANAGEMENT', 'GLOBAL_VIEWER'].includes(role || '') &&
+    !chartFilter.iup_id
+
+  if (needIup) {
     toast.warning('Please select IUP first')
     return
   }
