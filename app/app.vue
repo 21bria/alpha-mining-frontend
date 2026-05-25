@@ -65,20 +65,16 @@ const dir = computed(() => textDirection.value === 'rtl' ? 'rtl' : 'ltr')
 </script>
 
 <template>
-
   <Body class="overscroll-none antialiased bg-background text-foreground">
     <ConfigProvider :dir="dir">
       <div id="app" vaul-drawer-wrapper class="relative">
         <NuxtLayout>
           <NuxtPage />
         </NuxtLayout>
-
         <AppSettings />
       </div>
-
       <!-- <Toaster :theme="colorMode.preference as any || 'system'" /> -->
       <Toaster :theme="colorMode.preference as any || 'system'" position="top-right"/>
-      
     </ConfigProvider>
   </Body>
 </template>

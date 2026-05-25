@@ -8,18 +8,18 @@ definePageMeta({
 
 <template>
   <div class="flex flex-col items-center justify-center gap-6 bg-muted p-6 min-h-svh md:p-10">
-    <div class="max-w-sm w-full flex flex-col gap-6">
+    <div class="max-w-sm w-full flex flex-col gap-2">
       <NuxtLink to="#" class="flex items-center self-center gap-1 font-medium">
-        <div class="h-10 w-10 flex items-center justify-center">
-          <img src="/alpha.png" class="size-10 object-contain">
+        <div class="h-20 w-24 flex items-center justify-center">
+          <img src="/alpha.png" class="size-24 object-contain">
         </div>
 
-        <span>
+        <!-- <span>
           Alpha Apps.
-        </span>
+        </span> -->
 
       </NuxtLink>
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-4">
         <Card>
           <CardHeader class="text-center">
             <CardTitle class="text-xl">
