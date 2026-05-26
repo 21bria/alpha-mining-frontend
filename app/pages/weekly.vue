@@ -291,7 +291,7 @@ function openFile(url?: string | null) {
 
 <template>
 
-  <div class="relative min-h-[calc(100vh-56px)] w-full overflow-hidden px-14 lg:px-14">
+  <div class="relative min-h-[calc(100vh-56px)] w-full overflow-hidden px-6 lg:px-6">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-2xl font-bold tracking-tight">
         Operations Scorecard
