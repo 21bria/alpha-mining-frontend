@@ -67,7 +67,7 @@ async function loadReport(payload: {
   isLoading.value = true
 
   try {
-    const res: any = await request("/api/analytics/bod-weekly-report/", {
+    const res: any = await request("/api/analytics/weekly-report/", {
       method: "GET",
       query: cleanQuery({
         iup_id: route.query.iup_id,
