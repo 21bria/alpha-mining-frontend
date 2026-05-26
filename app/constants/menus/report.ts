@@ -165,6 +165,9 @@ export const menusReport: NavMenu[] = [
         icon: 'i-lucide-activity',
         new: true,
         link: '/report/bod',
+        require: {
+          any: ["analytics.view_bodweeklyreport"],
+        },
       },
     ],
   },
