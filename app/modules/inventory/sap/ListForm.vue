@@ -5,7 +5,7 @@ import { useApi } from "@/composables/useApi"
 import { useNotify } from "@/composables/useNotify"
 import { useCurrentRole } from "@/composables/useCurrentRole"
 import { useAuthStore } from "@/stores/auth"
-import InventoryToolbar from "@/modules/inventory/sap/components/InventoryToolbar.vue"
+import InventoryToolbar from "@/modules/inventory/components/InventoryMaterialToolbar.vue"
 
 const { isSystem } = useCurrentRole()
 const authStore = useAuthStore()
@@ -13,10 +13,15 @@ const authStore = useAuthStore()
 // ambil iup dari user login
 const userIupId = authStore.user?.iup_id ?? null
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 type InventoryFilters = {
   iup_id: number | null
   sampling_area: string | null
   domes: string[]
+  cut_date: string | null
 }
 
 type InventoryRow = {
@@ -88,6 +93,7 @@ const filters = ref<InventoryFilters>({
   iup_id: isSystem.value ? null : userIupId,
   sampling_area: null,
   domes: [],
+  cut_date: todayISO(),
 })
 
 const headers = [
@@ -144,6 +150,9 @@ async function fetchInventory(reset = false) {
     params.append("page", String(page.value))
     params.append("page_size", String(pageSize.value))
 
+     if (filters.value.cut_date) {
+      params.append("cut_date", filters.value.cut_date)
+    }
 
     if (filters.value.sampling_area) {
       params.append("areaFilter", filters.value.sampling_area)
@@ -186,6 +195,7 @@ function resetFilters() {
     iup_id: isSystem.value ? null : userIupId,
     sampling_area: null,
     domes: [],
+    cut_date: todayISO(),
   }
   fetchInventory(true)
 }

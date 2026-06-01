@@ -5,7 +5,7 @@ import { useApi } from "@/composables/useApi"
 import { useNotify } from "@/composables/useNotify"
 import { useCurrentRole } from "@/composables/useCurrentRole"
 import { useAuthStore } from "@/stores/auth"
-import InventoryToolbar from "@/modules/inventory/list/components/InventoryToolbar.vue"
+import InventoryToolbar from "@/modules/inventory/components/InventoryToolbar.vue"
 
 const notify = useNotify()
 
@@ -15,11 +15,16 @@ const authStore = useAuthStore()
 // ambil iup dari user login
 const userIupId = authStore.user?.iup_id ?? null
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 type InventoryFilters = {
   iup_id: number | null
   material: string | null
   sampling_area: string | null
   domes: string[]
+  cut_date: string | null
 }
 
 type InventoryRow = {
@@ -85,12 +90,13 @@ const hasMore = ref(true)
 const loading = ref(false)
 const initialized = ref(false)
 
-// 🔥 FILTER (AUTO BY ROLE)
+//  FILTER (AUTO BY ROLE)
 const filters = ref<InventoryFilters>({
   iup_id: isSystem.value ? null : userIupId,
   material: null,
   sampling_area: null,
   domes: [],
+  cut_date: todayISO(),
 })
 
 const headers = [
@@ -118,9 +124,9 @@ function fmt(v: number | null | undefined) {
   return Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 })
 }
 
-// 🔥 FETCH (AMAN)
+//  FETCH (AMAN)
 async function fetchInventory(reset = false) {
-  // 🚨 SYSTEM belum pilih IUP → stop
+  //  SYSTEM belum pilih IUP → stop
   if (!filters.value.iup_id) {
     rows.value = []
     summary.value = null
@@ -147,6 +153,9 @@ async function fetchInventory(reset = false) {
     params.append("page", String(page.value))
     params.append("page_size", String(pageSize.value))
 
+    if (filters.value.cut_date) {
+      params.append("cut_date", filters.value.cut_date)
+    }
     if (filters.value.material) {
       params.append("material", filters.value.material)
     }
@@ -180,19 +189,20 @@ async function fetchInventory(reset = false) {
   }
 }
 
-// 🔥 APPLY
+// APPLY
 function applyFilters(v: InventoryFilters) {
   filters.value = { ...v }
   fetchInventory(true)
 }
 
-// 🔥 RESET
+//  RESET
 function resetFilters() {
   filters.value = {
     iup_id: isSystem.value ? null : userIupId,
     material: null,
     sampling_area: null,
     domes: [],
+    cut_date: todayISO(),
   }
   fetchInventory(true)
 }

@@ -5,7 +5,7 @@ import { useApi } from "@/composables/useApi"
 import { useNotify } from "@/composables/useNotify"
 import { useCurrentRole } from "@/composables/useCurrentRole"
 import { useAuthStore } from "@/stores/auth"
-import InventoryToolbar from "@/modules/inventory/stockpiles/components/InventoryToolbar.vue"
+import InventoryToolbar from "@/modules/inventory/components/InventoryStockpileToolbar.vue"
 
 const { isSystem } = useCurrentRole()
 const authStore = useAuthStore()
@@ -13,10 +13,15 @@ const authStore = useAuthStore()
 // ambil iup dari user login
 const userIupId = authStore.user?.iup_id ?? null
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 type InventoryFilters = {
   iup_id: number | null
   material: string | null
   sampling_area: string[]
+  cut_date: string | null
 }
 
 type InventoryRow = {
@@ -88,6 +93,7 @@ const filters = ref<InventoryFilters>({
   iup_id: isSystem.value ? null : userIupId,
   material: null,
   sampling_area: [],
+  cut_date: todayISO(),
 })
 
 const headers = [
@@ -144,13 +150,21 @@ async function fetchInventory(reset = false) {
     params.append("page", String(page.value))
     params.append("page_size", String(pageSize.value))
 
-    if (filters.value.material) {
-      params.append("material", filters.value.material)
-    }
+   if (filters.value.material) {
+  params.append("material", filters.value.material)
+}
 
-    filters.value.sampling_area.forEach((d) => {
-      params.append("sampling_area", d)
-    })
+if (filters.value.cut_date) {
+  params.append("cut_date", filters.value.cut_date)
+}
+
+const samplingAreas = Array.isArray(filters.value.sampling_area)
+  ? filters.value.sampling_area
+  : []
+
+samplingAreas.forEach((d) => {
+  params.append("sampling_area", d)
+})
 
     const res = await request<InventoryResponse>(
       `/api/geology/raw/inventory/stockpiles/?${params.toString()}`
@@ -185,6 +199,7 @@ function resetFilters() {
     iup_id: isSystem.value ? null : userIupId,
     material: null,
     sampling_area: [],
+    cut_date: todayISO(),
   }
   fetchInventory(true)
 }
