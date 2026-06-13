@@ -13,6 +13,7 @@ export interface NavLink {
   link: string
   icon?: string
   new?: boolean
+  category?: string
   require?: Require
 }
 
@@ -20,6 +21,7 @@ export interface NavGroup {
   title: string
   icon?: string
   new?: boolean
+  category?: string
   require?: Require
   children: NavItem[]
 }
@@ -28,9 +30,8 @@ export type NavItem = NavLink | NavGroup | NavSectionTitle
 
 export interface NavMenu {
   heading: string
-  require?: Require   
+  require?: Require
   items: NavItem[]
 }
 
-/** menu bawah biasanya link/group saja */
 export type NavMenuBottom = (NavLink | NavGroup)[]

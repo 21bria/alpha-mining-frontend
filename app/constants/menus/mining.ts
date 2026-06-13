@@ -6,7 +6,7 @@ export const menusMining: NavMenu[] = [
     require: {
       any: [
         "mining.view_mineproductions",
-        "mining.view_planproductions",
+        "mining.view_planproduction",
         "mining.view_weather",
         "mining.view_rainfall",
         "mining.view_rainfallpoint",
@@ -18,31 +18,32 @@ export const menusMining: NavMenu[] = [
     },
     items: [
       {
-        title: 'Productions',
+        title: 'Operations',
         icon: 'i-lucide-folder-input',
         require: {
           any: [
             "mining.view_mineproductions",
-            "mining.view_planproductions",
+            "mining.view_planproduction",
           ],
         },
         children: [
+           {
+            title: 'Planing',
+            icon: 'i-lucide-circle',
+            link: '/mining/plan',
+            require: {
+              any: ["mining.view_planproduction"]
+            },
+          },
           {
-            title: 'Data List',
+            title: 'Production',
             icon: 'i-lucide-circle',
             link: '/mining/productions/',
             require: {
               any: ["mining.view_mineproductions"]
             },
           },
-          {
-            title: 'Data Planing',
-            icon: 'i-lucide-circle',
-            link: '/mining/plan',
-            require: {
-              any: ["mining.view_planproductions"]
-            },
-          },
+         
           // {
           //   title: 'Reconcile',
           //   icon: 'i-lucide-circle',

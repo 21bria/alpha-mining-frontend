@@ -7,8 +7,9 @@ import DataRoa from "@/modules/report/quality/sample-duplicated/data-roa/ListFor
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-lg font-bold tracking-tight">
-          Sample Duplicated analytics
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+          Sample duplicated
+        <span class="text-xl">✨</span>
         </h2>
         <p class="text-muted-foreground">
           List of sample duplicated analytics

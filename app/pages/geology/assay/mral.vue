@@ -7,9 +7,15 @@ import ListForm from "@/modules/geology/assay-mral/ListForm.vue"
         <div class="grid gap-2">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold">Data assay mral</h3>
-                    <p class="text-sm text-muted-foreground">Manage list of assay mral.</p>
+                    <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+                      Assay mral data
+                    <span class="text-xl">✨</span>
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                    View and manage assay mral records efficiently.
+                    </p>
                 </div>
+
             </div>
         </div>
 

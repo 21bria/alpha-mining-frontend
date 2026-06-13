@@ -7,8 +7,13 @@ import DomeForm from "@/modules/geology/compositing/DomeForm.vue"
         <div class="grid gap-2">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold">Dome Compositing</h3>
-                    <p class="text-sm text-muted-foreground">Manage dome compositing.</p>
+                <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+                 Dome Compositing data
+                <span class="text-xl">✨</span>
+                </h2>
+                <p class="text-sm text-muted-foreground">
+                View and manage dome compositing records efficiently.
+                </p>
                 </div>
             </div>
         </div>

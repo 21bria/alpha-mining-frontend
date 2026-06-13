@@ -5,8 +5,13 @@ import SidebarNav from "@/modules/geology/dome-status/SidebarNav.vue"
 <template>
   <div class="pb-16 space-y-6">
     <div class="space-y-0.5">
-      <h2 class="text-2xl font-bold tracking-tight">Dome status data</h2>
-      <p class="text-muted-foreground">Manage data dome (close) and (finished selling).</p>
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+          Dome Status data
+        <span class="text-xl">✨</span>
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          View and manage close/finished selling records efficiently.
+        </p>
     </div>
 
     <Separator class="my-6" />

@@ -7,8 +7,13 @@ import ListForm from "@/modules/inventory/list/ListForm.vue"
         <div class="grid gap-2">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold">Inventory Detail</h3>
-                    <p class="text-sm text-muted-foreground">Review data inventory.</p>
+                <h2 class="text-2xl font-normal tracking-tight">
+                Inventory data
+                <span class="text-xl">✨</span>
+                </h2>
+                <p class="text-sm text-muted-foreground">
+                 View inventory records efficiently.
+                </p>
                 </div>
             </div>
         </div>

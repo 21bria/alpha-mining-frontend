@@ -264,7 +264,7 @@ const newChat = () => {
         </span>
       </div>
 
-      <h1 class="text-5xl font-bold tracking-tight mt-6
+      <h1 class="text-4xl font-bold tracking-tight mt-6
         bg-gradient-to-r from-foreground to-foreground/70
         bg-clip-text text-transparent">
         How can I help you today?

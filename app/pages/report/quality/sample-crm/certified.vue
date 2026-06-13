@@ -6,11 +6,12 @@ import ListForm from "@/modules/report/quality/sample-crm/certified/ListForm.vue
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-        CRM Certificate
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+         CRM Certificate
+        <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-        List of CRM Certificates
+        <p class="text-sm text-muted-foreground">
+          Report crm certificates records efficiently.
         </p>
       </div>
     </div>

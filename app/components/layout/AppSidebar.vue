@@ -30,7 +30,7 @@ const navMenuBottom = computed(() => filterNavMenuItems(navMenuBottomRaw as any,
 const teams = [
   {
     name: "Alpha Apps.",
-    logo: "/alpha.png",
+    logo: "/meinova.png",
     plan: "Mining Intelligence"
   }
 ]
@@ -55,20 +55,34 @@ const { sidebar } = useAppSettings()
       <Search />
     </SidebarHeader>
 
-    <SidebarContent class="scrollbar-hover">
-      <SidebarGroup v-for="(nav, indexGroup) in navMenu" :key="indexGroup">
-        <SidebarGroupLabel v-if="nav.heading">
-          {{ nav.heading }}
-        </SidebarGroupLabel>
+   <SidebarContent class="scrollbar-hover">
+  <SidebarGroup
+    v-for="(nav, indexGroup) in navMenu"
+    :key="indexGroup"
+    :class="!nav.heading ? 'mt-3 border-t pt-3' : ''"
+  >
+    <SidebarGroupLabel v-if="nav.heading">
+      {{ nav.heading }}
+    </SidebarGroupLabel>
 
-        <component :is="resolveNavItemComponent(item)" v-for="(item, index) in nav.items" :key="index" :item="item" />
-      </SidebarGroup>
+    <component
+      :is="resolveNavItemComponent(item)"
+      v-for="(item, index) in nav.items"
+      :key="index"
+      :item="item"
+    />
+  </SidebarGroup>
 
-      <SidebarGroup class="mt-auto">
-        <component :is="resolveNavItemComponent(item)" v-for="(item, index) in navMenuBottom" :key="index" :item="item"
-          size="sm" />
-      </SidebarGroup>
-    </SidebarContent>
+  <SidebarGroup class="mt-auto">
+    <component
+      :is="resolveNavItemComponent(item)"
+      v-for="(item, index) in navMenuBottom"
+      :key="index"
+      :item="item"
+      size="sm"
+    />
+  </SidebarGroup>
+</SidebarContent>
 
     <SidebarFooter>
       <LayoutSidebarNavFooter :user="user" />

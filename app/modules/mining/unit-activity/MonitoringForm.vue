@@ -133,12 +133,13 @@ async function handleCopy() {
     <div class="w-full max-w-7xl space-y-4">
       <div class="grid gap-2">
         <div>
-          <h2 class="text-2xl font-bold tracking-tight">
-            Monitoring EWH
-          </h2>
-          <p class="text-muted-foreground">
-            Manage data units activities
-          </p>
+         <h2 class="text-2xl font-normal tracking-tight">
+          EWH monitoring data
+          <span class="text-xl">✨</span>
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          View and manage units activities records efficiently.
+        </p>
         </div>
       </div>
     <div class="flex flex-wrap items-end justify-between gap-2">

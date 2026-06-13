@@ -7,11 +7,12 @@ import ChartRoa from "@/modules/report/quality/sample-crm/analysis/data-roa/Char
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-          Chart CRM analytics
+       <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+         CRM - Chart data
+        <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-          Data of CRM analytics
+        <p class="text-sm text-muted-foreground">
+          Report and analytics CRM records efficiently.
         </p>
       </div>
     </div>

@@ -10,7 +10,7 @@ definePageMeta({
     <div class="max-w-sm w-full flex flex-col gap-6">
        <NuxtLink to="#" class="flex items-center self-center gap-1 font-medium">
         <div class="h-20 w-24 flex items-center justify-center">
-          <img src="/alpha.png" class="size-24 object-contain">
+          <img src="/meinova.png" class="size-24 object-contain">
         </div>
 
         <!-- <span>

@@ -92,11 +92,12 @@ onMounted(() => {
   <div class="w-full flex flex-col items-stretch gap-4">
     <div class="flex flex-wrap items-end justify-start gap-2">
       <div>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
           Analysis Internal vs Official COA
-        </h1>
+        <span class="text-xl">✨</span>
+        </h2>
         <p class="text-muted-foreground">
-          Here&apos;s a list of your coa for this data!
+          Here&apos;s a chart of your coa for this data!
         </p>
       </div>
 

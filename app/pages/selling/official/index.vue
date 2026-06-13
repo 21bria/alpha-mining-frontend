@@ -7,8 +7,13 @@ import ListForm from "@/modules/selling/official/ListForm.vue"
         <div class="grid gap-2">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold">Official Selling</h3>
-                    <p class="text-sm text-muted-foreground">Manage data official selling.</p>
+                   <h2 class="text-2xl font-normal tracking-tight">
+                    Selling Official data
+                    <span class="text-xl">✨</span>
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                    View and manage official records efficiently.
+                    </p>
                 </div>
             </div>
         </div>

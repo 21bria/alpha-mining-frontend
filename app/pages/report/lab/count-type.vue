@@ -7,11 +7,12 @@ import ChartYearly from "@/modules/report/lab/count-type/ChartYearlyForm.vue"
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-lg font-bold tracking-tight">
-          Sample Orders count by type
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+         Samples Orders by Type
+        <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-          List of sample orders count by type analytics
+        <p class="text-sm text-muted-foreground">
+          Report and analytics samples orders records efficiently.
         </p>
       </div>
     </div>

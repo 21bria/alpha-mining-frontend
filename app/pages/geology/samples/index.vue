@@ -8,14 +8,16 @@ import SellingForm from "@/modules/geology/samples/selling/SellingForm.vue"
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-          Sample data
-        </h2>
-        <p class="text-muted-foreground">
-         Manage data sample geology and selling.
-        </p>
-      </div>
+      <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+       Sample data
+        <span class="text-xl">✨</span>
+      </h2>
+
+      <p class="text-sm text-muted-foreground">
+        Manage data sample geology and selling.
+      </p>
     </div>
+  </div>
 
 
     <div class="w-full space-y-4">

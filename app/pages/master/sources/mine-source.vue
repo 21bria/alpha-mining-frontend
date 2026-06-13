@@ -226,8 +226,13 @@ watchEffect(() => {
   <div class="w-full flex flex-col items-stretch gap-4">
     <div class="flex flex-wrap items-end justify-between gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">Mine Source</h2>
-        <p class="text-muted-foreground">List of Mine Sources</p>
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+          Mine Source data
+        <span class="text-xl">✨</span>
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          View and manage source records efficiently.
+        </p>
       </div>
     </div>
 

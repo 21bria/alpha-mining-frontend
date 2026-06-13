@@ -21,12 +21,12 @@ useHead({
     rel: 'icon',
     type: 'image/png',
     sizes: '32x32',
-    href: '/alpha.png'
+    href: '/meinova.png'
   },
   {
     rel: 'apple-touch-icon',
     sizes: '180x180',
-    href: '/alpha.png'
+    href: '/meinova.png'
   }
 ],
   htmlAttrs: {

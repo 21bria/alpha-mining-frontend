@@ -6,11 +6,12 @@ import ListForm from "@/modules/selling/code-adjust/ListForm.vue"
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-          Data Adjustment barging
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+          Barging Adjustment data
+        <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-         Manage selling adjust(tonnage) by code.
+        <p class="text-sm text-muted-foreground">
+          View and manage adjustment barging records efficiently.
         </p>
       </div>
     </div>

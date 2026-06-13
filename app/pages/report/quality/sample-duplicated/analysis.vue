@@ -7,8 +7,9 @@ import ChartRoa from "@/modules/report/quality/sample-duplicated/data-roa/ChartF
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-          Chart sample duplicated analytics
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+         Chart sample duplicated
+        <span class="text-xl">✨</span>
         </h2>
         <p class="text-muted-foreground">
           Data of samples duplicated analytics

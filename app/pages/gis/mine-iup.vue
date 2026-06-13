@@ -376,10 +376,12 @@ onBeforeUnmount(() => {
     <div class="w-full flex flex-col items-stretch gap-4">
       <div class="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+      
+           <h2 class="text-2xl font-normal tracking-tight">
             Mine IUP - Boundary
-          </h1>
-          <p class="text-muted-foreground">
+            <span class="text-xl">✨</span>
+           </h2>
+          <p class="text-sm text-muted-foreground">
             Please select IUP in the right side option to display data according to geographic area.
           </p>
         </div>

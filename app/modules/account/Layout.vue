@@ -5,8 +5,13 @@ import SidebarNav from "@/modules/account/SidebarNav.vue"
 <template>
   <div class="pb-16 space-y-6">
     <div class="space-y-0.5">
-      <h2 class="text-2xl font-bold tracking-tight">Account Settings</h2>
-      <p class="text-muted-foreground">Manage account settings and set permissions.</p>
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+         Account Settings data
+        <span class="text-xl">✨</span>
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          View and manage accounts & permissions records efficiently.
+        </p>
     </div>
 
     <Separator class="my-6" />

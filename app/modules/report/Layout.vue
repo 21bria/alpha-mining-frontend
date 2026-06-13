@@ -5,9 +5,10 @@ import SidebarNav from "@/modules/report/SidebarNav.vue"
 <template>
   <div class="pb-16 space-y-6">
     <div class="space-y-0.5">
-      <h2 class="text-2xl font-bold tracking-tight">
-        Report
-      </h2>
+      <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+         Report & Compile data
+        <span class="text-xl">✨</span>
+       </h2>
       <p class="text-muted-foreground">
         Manage reports, you compile automatic summaries to excel files.
       </p>

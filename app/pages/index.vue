@@ -5,14 +5,16 @@
       <!-- HEADER + FILTER -->
       <div class="flex flex-col gap-2">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 class="text-xl font-semibold tracking-tight">
-              Dashboard
-            </h2>
-            <p class="text-xs text-muted-foreground">
-              Select application menu based on active filter.
-            </p>
-          </div>
+        <div>
+          <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+            Hi, Welcome Back
+            <span class="text-xl">👋</span>
+          </h2>
+
+          <p class="text-xs text-muted-foreground">
+            Access your applications and operational insights from one place.
+          </p>
+        </div>
 
           <!-- <FilterControls /> -->
         <FilterControls
@@ -193,10 +195,10 @@ const appMenus: AppMenuItem[] = [
   //   iconClass: 'bg-gradient-to-br from-red-400 to-red-600'
   // },
   {
-    key: 'weekly',
-    label: 'Weekly',
-    description: 'Weekly management',
-    path: '/weekly',
+    key: 'management',
+    label: 'Report',
+    description: 'Report management',
+    path: '/management/report',
     icon: FileCheck,
     iconClass: 'bg-gradient-to-br from-red-400 to-red-600'
   },

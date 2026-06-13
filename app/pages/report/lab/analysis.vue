@@ -7,12 +7,14 @@ import ChartRoa from "@/modules/report/lab/analysis-tat/ChartRoaForm.vue"
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-lg font-bold tracking-tight">
-          Lab Performance TAT
+       <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+         Lab Performance TAT
+        <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-          List of lab performance tat analytics
+        <p class="text-sm text-muted-foreground">
+          Report and analytics lab performance tat records efficiently.
         </p>
+
       </div>
     </div>
 

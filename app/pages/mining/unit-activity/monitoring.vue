@@ -4,7 +4,6 @@ import MonitoringForm from "@/modules/mining/unit-activity/MonitoringForm.vue"
 
 <template>
   <div class="flex flex-col gap-4">
-  
 
     <div class="w-full space-y-4">
       <div class="w-full">

@@ -6,7 +6,7 @@ export const menusInventory: NavMenu[] = [
     items: [
       {
         title: 'By dome',
-        icon: 'i-lucide-table-columns-split',
+        icon: 'i-lucide-layout-dashboard',
         children: [
           {
             title: 'Data All',

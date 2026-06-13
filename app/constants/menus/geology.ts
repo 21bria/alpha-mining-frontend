@@ -24,68 +24,21 @@ export const menusGeology: NavMenu[] = [
     items: [
       {
         title: 'Samples',
-        icon: 'i-lucide-map',
+        icon: 'i-lucide-pickaxe',
+        link: '/geology/samples',
         require: { any: ["geology.view_sampleproductions"] },
-        children: [
-          {
-            title: 'Samples Data',
-            icon: 'i-lucide-circle',
-            link: '/geology/samples',
-            require: { any: ["geology.view_sampleproductions"] },
-          },
-          // {
-          //   title: 'Samples Error',
-          //   icon: 'i-lucide-circle',
-          //   link: '/geology/error',
-          //   require: { any: ["geology.view_sampleproductions"] },
-          // },
-          // {
-          //   title: 'Samples to Lab',
-          //   icon: 'i-lucide-circle',
-          //   link: '/geolgy/pending-lab',
-          //   require: { any: ["geology.view_sampleproductions"] },
-          // },
-        ],
       },
       {
         title: 'Waybills',
         icon: 'i-lucide-clipboard-clock',
+        link: '/geology/waybills',
         require: { any: ["geology.view_waybills"] },
-        children: [
-          {
-            title: 'Data List',
-            icon: 'i-lucide-circle',
-            link: '/geology/waybills',
-            require: { any: ["geology.view_waybills"] },
-          },
-          // {
-          //   title: 'Data Over',
-          //   icon: 'i-lucide-circle',
-          //   link: '/geology/waybills/over',
-          //   require: { any: ["geology.view_waybills"] },
-          // },
-
-        ],
       },
       {
         title: 'Productions',
-        icon: 'i-lucide-share-2',
+        icon: 'i-lucide-database-zap',
+        link: '/geology/productions',
         require: { any: ["geology.view_oreproductions"] },
-        children: [
-          {
-            title: 'Data List',
-            icon: 'i-lucide-circle',
-            link: '/geology/productions',
-            require: { any: ["geology.view_oreproductions"] },
-          },
-       
-          // {
-          //   title: 'Status batch',
-          //   icon: 'i-lucide-circle',
-          //   link: '/geology/productions/batch',
-          //   require: { any: ["geology.view_oreproductions"] },
-          // },
-        ],
       },
 
       {
@@ -113,67 +66,20 @@ export const menusGeology: NavMenu[] = [
 
         ],
       },
-
       {
-        title: 'Configurations',
-        icon: 'i-lucide-settings',
+        title: "Settings",
+        icon: "i-lucide-settings",
+        link: "/geology/configurations",
         require: {
           any: [
             "master.view_oreclass",
             "master.view_oretruckfactor",
             "geology.view_oreadjustment",
             "geology.view_domeadjustment",
-            "geology.view_domemerge",
-            "geology.view_stockpilemerge",
             "geology.view_domestatusclose",
-            "geology.view_domestatusfinish",
+            "geology.view_domemerge",
           ],
         },
-        children: [
-          {
-            title: 'Ore Class',
-            icon: 'i-lucide-circle',
-            link: '/master/ore-class',
-            require: { any: ["master.view_oreclass"] }
-          },
-          {
-            title: 'Fill factors',
-            icon: 'i-lucide-circle',
-            link: '/master/fill-factors',
-            require: { any: ["master.view_oretruckfactor"] }
-          },
-          {
-            title: 'Ore adjust',
-            icon: 'i-lucide-circle',
-            link: '/geology/ore-adjust',
-            require: { any: ["geology.view_oreadjustment"] },
-          },
-          {
-            title: 'Dome adjust',
-            icon: 'i-lucide-circle',
-            link: '/geology/dome-adjust',
-            require: { any: ["geology.view_domeadjustment"] },
-          },
-          {
-            title: 'Dome status',
-            icon: 'i-lucide-circle',
-            link: '/geology/dome-status',
-            require: { any: ["geology.view_domestatusclose"] },
-          },
-   
-          // {
-          //   title: 'Merge dome',
-          //   icon: 'i-lucide-circle',
-          //   link: '/geology/dome/merge',
-          //   require: { any: ["geology.view_domemerge"] },
-          // },
-          {
-            title: 'Compositing',
-            icon: 'i-lucide-circle',
-            link: '/geology/compositing',
-            require: { any: ["geology.view_domemerge"] },
-          },
-        ],
       },
     ],
   },

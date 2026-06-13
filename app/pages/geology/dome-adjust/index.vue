@@ -6,11 +6,12 @@ import ListForm from "@/modules/geology/dome-adjust/ListForm.vue"
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-          Dome Adjustment
+        <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+          Dome Adjustment data
+        <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-         Manage dome adjust(tonnage).
+        <p class="text-sm text-muted-foreground">
+          View and manage adjustment(tonnage) records efficiently.
         </p>
       </div>
     </div>

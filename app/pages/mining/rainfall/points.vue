@@ -6,11 +6,12 @@ import ListForm from "@/modules/master/rainfall-point/ListForm.vue"
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-          Rainfall Points
+        <h2 class="text-2xl font-normal tracking-tight">
+          Mining Rainfall point
+          <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-          Mining rainfall points data
+        <p class="text-sm text-muted-foreground">
+          View and manage rainfall point records efficiently.
         </p>
       </div>
     </div>

@@ -6,11 +6,12 @@ import ListForm from "@/modules/selling/plan/ListForm.vue"
   <div class="flex flex-col gap-4">
     <div class="grid gap-2">
       <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-         Plan Barging
+        <h2 class="text-2xl font-normal tracking-tight">
+          Barging Plan data
+          <span class="text-xl">✨</span>
         </h2>
-        <p class="text-muted-foreground">
-        List of Plan Barging
+        <p class="text-sm text-muted-foreground">
+          View and manage plan records efficiently.
         </p>
       </div>
     </div>

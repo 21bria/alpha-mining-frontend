@@ -360,8 +360,13 @@ watch(error, (v) => {
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-semibold">Mining productions</h2>
-        <p class="text-sm text-muted-foreground">Manage  mining production data.</p>
+        <h2 class="text-2xl font-normal tracking-tight">
+          Mining productions data
+          <span class="text-xl">✨</span>
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          View and manage production records efficiently.
+        </p>
       </div>
       <!-- summary -->
       <div class="grid w-full grid-cols-1 overflow-hidden rounded-2xl border sm:grid-cols-3 xl:w-auto">
