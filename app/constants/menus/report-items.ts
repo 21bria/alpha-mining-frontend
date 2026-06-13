@@ -102,11 +102,11 @@ export const reportItems: ReportItem[] = [
     title: "Dome sample",
     icon: "i-lucide-ticket",
     category: "Quality",
-    new: false,
+    new: true,
     link: "/report/quality/samples/dome",
-    // require: {
-    //   any: ["geology.view_sampledome"],
-    // },
+    require: {
+      any: ["geology.view_samplesdomeview"],
+    },
   },
 
   {
