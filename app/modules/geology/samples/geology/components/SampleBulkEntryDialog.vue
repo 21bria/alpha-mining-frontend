@@ -58,6 +58,7 @@ const props = defineProps<{
   role: UserRole
   fixedIup?: number | null
   fixedIupLabel?: string | null
+  errors?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -119,10 +120,6 @@ const rows = ref<RowState[]>([
   emptyRow(),
 ])
 
-// function addRow() {
-//   rows.value.push(emptyRow())
-  
-// }
 
 function addRow() {
   const row = emptyRow()
@@ -133,16 +130,6 @@ function addRow() {
   fetchSamplingAreas(row)
 }
 
-// function duplicateRow(index: number) {
-//   const current = rows.value[index]
-//   if (!current) return
-
-//   rows.value.splice(index + 1, 0, {
-//     ...current,
-//     methodOptions: [...current.methodOptions],
-//     pointOptions: [...current.pointOptions],
-//   })
-// }
 
 function duplicateRow(index: number) {
   const current = rows.value[index]
@@ -467,7 +454,20 @@ function submit() {
       <DialogHeader class="shrink-0">
         <DialogTitle>Add Multiple Samples</DialogTitle>
       </DialogHeader>
+      <div
+        v-if="props.errors?.length"
+        class="shrink-0 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+      >
+        <div class="mb-1 font-semibold">
+          Validation error
+        </div>
 
+        <ul class="list-disc space-y-1 pl-5">
+          <li v-for="(err, i) in props.errors" :key="i">
+            {{ err }}
+          </li>
+        </ul>
+      </div>
       <div class="flex-1 min-h-0 overflow-auto scroll-thin border rounded-lg">
         <Table>
           <TableHeader class="sticky top-0 z-20 bg-background">

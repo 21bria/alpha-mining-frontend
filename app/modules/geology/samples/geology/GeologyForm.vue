@@ -15,7 +15,6 @@ import { samplesFilters } from "@/modules/geology/samples/geology/filters"
 import { buildExportSchema } from "@/modules/geology/samples/geology/export"
 import GeologyForm from "@/modules/geology/samples/geology/components/GeologyDialog.vue"
 import SampleBulkEntryDialog from "@/modules/geology/samples/geology/components/SampleBulkEntryDialog.vue"
-import DeleteRangeDialog from "@/components/global/DeleteRangeDialog.vue"
 import ExportDialog from "@/components/global/ExportDialog.vue"
 
 import { useCurrentRole } from "@/composables/useCurrentRole"
@@ -153,8 +152,11 @@ const deleteOpen = ref(false)
 const selectedDelete = ref<GeologyRow | null>(null)
 const bulkDialogOpen = ref(false)
 
+const bulkErrors = ref<string[]>([])
+
 // create
 function openCreate() {
+  bulkErrors.value = []
   bulkDialogOpen.value = true
 }
 // edit
@@ -207,9 +209,11 @@ async function submit(payload: SamplePayload) {
     formLoading.value = false
   }
 }
+
 // bulk submit
 async function submitBulk(payload: SamplePayload[]) {
   formLoading.value = true
+  bulkErrors.value = []
 
   try {
     await request("/api/geology/samples-crud/bulk-create/", {
@@ -221,12 +225,44 @@ async function submitBulk(payload: SamplePayload[]) {
     bulkDialogOpen.value = false
     await refresh()
   } catch (e: any) {
-    notify.error(e?.data?.detail || e?.message || "Failed bulk create")
+    const data =
+      e?.data ||
+      e?.response?._data ||
+      e?.response?.data
+
+    if (Array.isArray(data)) {
+      bulkErrors.value = data.flatMap((row: any, index: number) => {
+        if (row?.non_field_errors?.length) {
+          return row.non_field_errors.map(
+            (m: string) => `Row ${index + 1}: ${m}`
+          )
+        }
+
+        return Object.entries(row || {}).flatMap(([field, value]: any) => {
+          const text = Array.isArray(value)
+            ? value.join(", ")
+            : String(value)
+
+          return `Row ${index + 1} - ${field}: ${text}`
+        })
+      })
+
+      notify.error("Please check duplicate rows")
+      return
+    }
+
+    bulkErrors.value = [
+      data?.detail ||
+      data?.message ||
+      e?.message ||
+      "Failed bulk create",
+    ]
+
+    notify.error("Failed bulk create")
   } finally {
     formLoading.value = false
   }
 }
-
 // import
 const importOpen = ref(false)
 
@@ -425,6 +461,7 @@ watch(error, (v) => {
       v-model:open="bulkDialogOpen"
       :loading="formLoading"
       :role="currentRole"
+      :errors="bulkErrors"
       @submit="submitBulk"
     />
 
@@ -455,3 +492,4 @@ watch(error, (v) => {
     />
   </div>
 </template>
+

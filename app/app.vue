@@ -73,8 +73,25 @@ const dir = computed(() => textDirection.value === 'rtl' ? 'rtl' : 'ltr')
         </NuxtLayout>
         <AppSettings />
       </div>
-      <!-- <Toaster :theme="colorMode.preference as any || 'system'" /> -->
-      <Toaster :theme="colorMode.preference as any || 'system'" position="top-right"/>
     </ConfigProvider>
+
+    <Toaster
+      :theme="colorMode.preference as any || 'system'"
+      position="top-right"
+      rich-colors
+      close-button
+      class="z-[2147483647]"
+    />
   </Body>
 </template>
+
+<style>
+[data-sonner-toaster] {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+}
+
+[data-sonner-toast] {
+  z-index: 2147483647 !important;
+}
+</style>

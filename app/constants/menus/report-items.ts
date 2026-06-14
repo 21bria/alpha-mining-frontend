@@ -108,7 +108,35 @@ export const reportItems: ReportItem[] = [
       any: ["geology.view_samplesdomeview"],
     },
   },
-
+  {
+      title: "Reconciliation PSI",
+      icon: "i-lucide-git-compare-arrows",
+      category: "Quality",
+      // require: {
+      //   any: ["geology.view_samplecrmcertified,geology.view_samplecrmmralview", "geology.view_samplecromoaview"],
+      // },
+      children: [
+        {
+          title: "Sample PSI",
+          icon: "i-lucide-circle",
+          link: "/report/quality/sample-psi/data-list",
+          // require: {
+          //   any: ["geology.view_samplecrmmralview", "geology.view_samplecromoaview"],
+          // },
+        },
+        {
+          title: "Inventory PSI",
+          icon: "i-lucide-circle",
+          new: false,
+          link: "/report/quality/sample-psi/inventory",
+          // require: {
+          //   any: ["geology.view_samplecrmmralview", "geology.view_samplecromoaview"],
+          // },
+        },
+      ],
+    
+  },
+ 
   {
     title: "Laboratory (TAT)",
     icon: "i-lucide-radical",
