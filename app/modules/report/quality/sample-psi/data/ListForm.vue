@@ -5,6 +5,7 @@ import { useDebounceFn } from "@vueuse/core"
 import { useAsyncData } from "#app"
 
 import {
+  MapPinCheck,
   ClipboardCopy,
   CheckCircle2,
   AlertCircle,
@@ -15,13 +16,12 @@ import { useNotify } from "@/composables/useNotify"
 import { useApi } from "@/composables/useApi"
 import ExportDialog from "@/components/global/ExportDialog.vue"
 
-import { getSampleDomeColumns, type SampleDomeRow } from "@/modules/report/quality/samples-dome/columns"
-import { sampleDomeConfig } from "@/modules/report/quality/samples-dome/table"
-import { sampleDomeFilters } from "@/modules/report/quality/samples-dome/filters"
-import { buildExportSchema } from "@/modules/report/quality/samples-dome/export"
+import { getSampleDomeColumns, type SampleDomeRow } from "@/modules/report/quality/sample-psi/data/columns"
+import { samplePsiConfig } from "@/modules/report/quality/sample-psi/data/table"
+import { samplePsiFilters } from "@/modules/report/quality/sample-psi/data/filters"
+import { buildExportSchema } from "@/modules/report/quality/sample-psi/data/export"
 import { useCurrentRole } from "@/composables/useCurrentRole"
 
-import type { UserRole } from "@/utils/roles"
 
 const { currentRole } = useCurrentRole()
 
@@ -44,7 +44,7 @@ const search = ref("")
 const ordering = ref<string | null>(null)
 
 const serverFilters = ref<Record<string, any>>({
-  ...(sampleDomeConfig.defaultQuery ?? {}),
+  ...(samplePsiConfig.defaultQuery ?? {}),
 })
 
 const query = computed(() => ({
@@ -57,7 +57,7 @@ const query = computed(() => ({
 
 const { data, pending, error, refresh } = await useAsyncData<ApiList<SampleDomeRow>>(
   () => `sample-dome:${JSON.stringify(query.value)}`,
-  () => request(sampleDomeConfig.endpoint, { method: "GET", query: query.value }),
+  () => request(samplePsiConfig.endpoint, { method: "GET", query: query.value }),
   { server: false }
 )
 
@@ -84,7 +84,7 @@ function onApply({ search: s, filters }: any) {
 
 function onReset() {
   search.value = ""
-  serverFilters.value = { ...(sampleDomeConfig.defaultQuery ?? {}) }
+  serverFilters.value = { ...(samplePsiConfig.defaultQuery ?? {}) }
   ordering.value = null
   page.value = 1
   refresh()
@@ -112,13 +112,14 @@ function handleExport() {
 
 // summary
 async function fetchSummary() {
-  return await request('/api/analytics/sample-dome/summary/', {
+  return await request('/api/analytics/sample-psi/summary/', {
     method: 'GET',
     query: query.value,
   })
 }
 
 const summary = ref({
+  total_tonnage: 0,
   total_sample: 0,
   total_assay: 0,
   difference: 0,
@@ -129,6 +130,7 @@ async function loadSummary() {
     const res = await fetchSummary()
 
     summary.value = {
+      total_tonnage: res.total_tonnage ?? 0,
       total_sample: res.total_sample ?? 0,
       total_assay: res.total_assay ?? 0,
       difference: res.difference ?? 0,
@@ -166,16 +168,26 @@ watch(error, (v) => {
   <div class="flex items-center justify-between">
       <div>
         <h2 class="text-2xl font-normal tracking-tight">
-          Samples of dome data
+          Samples of psi data
           <span class="text-xl">✨</span>
         </h2>
         <p class="text-sm text-muted-foreground">
-          View and manage samples of dome records efficiently.
+          View and manage samples of psi records efficiently.
         </p>
       </div>
 
     <!-- summary -->
-    <div class="grid w-full grid-cols-1 overflow-hidden rounded-2xl border sm:grid-cols-3 xl:w-auto">
+    <div class="grid w-full grid-cols-1 overflow-hidden rounded-2xl border sm:grid-cols-4 xl:w-auto">
+        <!-- Sample -->
+        <div class="px-5 py-4 min-w-[150px]">
+          <div class="flex items-center gap-2">
+            <MapPinCheck class="h-4 w-4 text-orange-500" />
+            <p class="text-sm text-muted-foreground">Tonnage</p>
+          </div>
+          <p class="mt-1 text-lg font-semibold text-gray-800 dark:text-white">
+            {{ formatShortNumber(summary.total_tonnage) || 0 }}
+          </p>
+        </div>
         <!-- Sample -->
         <div class="px-5 py-4 min-w-[150px]">
           <div class="flex items-center gap-2">
@@ -223,7 +235,7 @@ watch(error, (v) => {
     :pageSize="pageSize" 
     :search="search" 
     :loading="pending" 
-    :filtersSchema="sampleDomeFilters" 
+    :filtersSchema="samplePsiFilters" 
     :showAdd="false"
     :showImport="false"
     :showExport="true" 
@@ -242,9 +254,9 @@ watch(error, (v) => {
     
   <ExportDialog
     v-model:open="exportOpen"
-    title="Export PSI Sample"
+    title="Export Dome Sample"
     :filtersSchema="buildExportSchema(currentRole)"
-    endpoint="/api/analytics/sample-psi/export/"
+    endpoint="/api/analytics/sample-dome/export/"
     method="GET"
     mode="async"
     jobStatusUrl="/api/analytics/export-jobs/{jobId}/"

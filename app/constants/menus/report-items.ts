@@ -95,9 +95,9 @@ export const reportItems: ReportItem[] = [
         },
       },
     ],
-    
+
   },
- 
+
   {
     title: "Dome sample",
     icon: "i-lucide-ticket",
@@ -109,34 +109,34 @@ export const reportItems: ReportItem[] = [
     },
   },
   {
-      title: "Reconciliation PSI",
-      icon: "i-lucide-git-compare-arrows",
-      category: "Quality",
-      // require: {
-      //   any: ["geology.view_samplecrmcertified,geology.view_samplecrmmralview", "geology.view_samplecromoaview"],
-      // },
-      children: [
-        {
-          title: "Sample PSI",
-          icon: "i-lucide-circle",
-          link: "/report/quality/sample-psi/data-list",
-          // require: {
-          //   any: ["geology.view_samplecrmmralview", "geology.view_samplecromoaview"],
-          // },
+    title: "Reconciliation PSI",
+    icon: "i-lucide-git-compare-arrows",
+    category: "Quality",
+    new: true,
+    require: {
+      any: ["geology.view_samplespsiview"],
+    },
+    children: [
+      {
+        title: "Sample PSI",
+        icon: "i-lucide-circle",
+        link: "/report/quality/sample-psi/data-list",
+        require: {
+          any: ["geology.view_samplespsiview"],
         },
-        {
-          title: "Inventory PSI",
-          icon: "i-lucide-circle",
-          new: false,
-          link: "/report/quality/sample-psi/inventory",
-          // require: {
-          //   any: ["geology.view_samplecrmmralview", "geology.view_samplecromoaview"],
-          // },
+      },
+      {
+        title: "Inventory PSI",
+        icon: "i-lucide-circle",
+        link: "/report/quality/sample-psi/inventory",
+        require: {
+          any: ["geology.view_samplespsiview"],
         },
-      ],
-    
+      },
+    ],
+
   },
- 
+
   {
     title: "Laboratory (TAT)",
     icon: "i-lucide-radical",
@@ -198,7 +198,7 @@ export const reportItems: ReportItem[] = [
       },
     ],
   },
- 
+
   {
     title: "Compile data",
     icon: "i-lucide-chart-no-axes-column",
