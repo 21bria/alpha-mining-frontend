@@ -1,24 +1,23 @@
-
 <template>
   <div class="chart-mask">
     <ChartScrollWrapper v-if="isScrollable">
-      <component 
-        :is="chartComponent" 
-        v-if="chartData" 
-        :series="chartData.series" 
+      <component
+        :is="chartComponent"
+        v-if="chartData"
+        :series="chartData.series"
         :categories="chartData.categories"
         :colors="colors"
         :details="chartData.details"
       />
     </ChartScrollWrapper>
 
-    <!-- fallback kalau nggak scroll -->
-    <component v-else 
-      :is="chartComponent" 
-      v-if="chartData" 
+    <component
+      v-else-if="chartData"
+      :is="chartComponent"
       :series="chartData.series"
-      :categories="chartData.categories" 
-      :colors="colors" 
+      :categories="chartData.categories"
+      :colors="colors"
+      :details="chartData.details"
     />
   </div>
 </template>
@@ -242,6 +241,7 @@ watch(
   width: 100%;
   min-width: 600px;
   overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* hide scrollbar semua browser */

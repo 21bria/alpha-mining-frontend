@@ -155,20 +155,6 @@ function toLookupOption(item: any, valueKeys: string[], labelKeys: string[]): Lo
   }
 }
 
-// function addRow() {
-//   const last = rows.value[rows.value.length - 1]
-
-//   rows.value.push(
-//     last
-//       ? {
-//           ...last,
-//           ritase: "",
-//           tonnage: "",
-//           remarks: "",
-//         }
-//       : emptyRow()
-//   )
-// }
 
 function addRow() {
   const row = emptyRow()
@@ -311,6 +297,7 @@ async function fetchProspects(row: RowState, q = "") {
 
 async function fetchMaterials(row: RowState, q = "") {
   row.materialLoading = true
+
   try {
     const res: any = await request("/api/master/lookups/material/", {
       method: "GET",
@@ -318,7 +305,8 @@ async function fetchMaterials(row: RowState, q = "") {
         q,
         page: 1,
         page_size: 20,
-        categories: "ORE",
+        is_ore: true,
+        is_production: true,
         value_key: "id",
         label_key: "name",
       },

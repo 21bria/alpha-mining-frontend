@@ -2,7 +2,6 @@ import type { ColumnDef } from "@tanstack/vue-table"
 import { h } from "vue"
 import { Checkbox } from "@/components/ui/checkbox"
 import DataTableColumnHeader from "@/components/data-table/DataTableColumnHeader.vue"
-import DataTableRowActions from "./components/DataTableRowActions.vue"
 import type { UserRole } from "@/utils/roles"
 
 export type ProductionsRow = {
@@ -58,7 +57,6 @@ export function getProductionsColumns(
 
   const role: UserRole = opts.role ?? "SITE_USER"
   const showIup = opts.showIup ?? (role !== "SITE_USER")
-  const canMutate = role !== "GLOBAL_VIEWER"
 
   const cols: ColumnDef<ProductionsRow>[] = [
     {
@@ -127,25 +125,6 @@ export function getProductionsColumns(
       enableSorting: true,
       cell: ({ row }) => h("div", { class: "font-medium" }, row.original.hauler ?? "-"),
     },
-    // {
-    //   accessorKey: "iup_code",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "IUP Code" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.iup_code ?? "-"),
-    // },
-    // {
-    //   accessorKey: "iup_name",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "IUP Name" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.iup_name ?? "-"),
-    // },
-
-    // {
-    //   accessorKey: "sources_area",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "Source Area" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.sources_area ?? "-"),
-    // },
     {
       accessorKey: "loading_point",
       header: ({ column }) => h(DataTableColumnHeader, { column, title: "Loading Point" }),
@@ -164,32 +143,12 @@ export function getProductionsColumns(
       enableSorting: true,
       cell: ({ row }) => h("div", { class: "font-medium" }, row.original.dome_id ?? "-"),
     },
-    // {
-    //   accessorKey: "mine_block",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "Block" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.mine_block ?? "-"),
-    // },
     {
       accessorKey: "nama_material",
       header: ({ column }) => h(DataTableColumnHeader, { column, title: "Material" }),
       enableSorting: true,
       cell: ({ row }) => h("div", { class: "font-medium" }, row.original.nama_material ?? "-"),
     },
-
-    // {
-    //   accessorKey: "hauler_class",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "Hauler Class" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.hauler_class ?? "-"),
-    // },
-    // {
-    //   accessorKey: "hauler_type",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "Hauler Type" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.hauler_type ?? "-"),
-    // },
-
 
     {
       accessorKey: "rl",
@@ -215,12 +174,6 @@ export function getProductionsColumns(
       enableSorting: true,
       cell: ({ row }) => h("div", { class: "font-medium" }, row.original.tonnage ?? "-"),
     },
-    // {
-    //   accessorKey: "t_load",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "T Load" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.t_load ?? "-"),
-    // },
     {
       accessorKey: "vendors",
       header: ({ column }) => h(DataTableColumnHeader, { column, title: "Vendor" }),
@@ -241,12 +194,6 @@ export function getProductionsColumns(
       enableSorting: true,
       cell: ({ row }) => h("div", { class: "font-medium" }, row.original.username ?? "-"),
     },
-    // {
-    //   accessorKey: "created_at",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "Created At" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "font-medium" }, row.original.created_at ?? "-"),
-    // },
     {
       accessorKey: "remarks",
       header: ({ column }) => h(DataTableColumnHeader, { column, title: "Remarks" }),
@@ -265,22 +212,6 @@ export function getProductionsColumns(
         } as ColumnDef<ProductionsRow>,
       ]
       : []),
-    // ...(canMutate
-    //   ? [
-    //     {
-    //       id: "actions",
-    //       header: () => h("div", { class: "text-left" }, "Actions"),
-    //       cell: ({ row }: { row: { original: ProductionsRow } }) =>
-    //         h("div", { class: "flex justify-end" }, [
-    //           h(DataTableRowActions, {
-    //             row: row.original,
-    //             onEdit: actions.onEdit,
-    //             onDelete: actions.onDelete,
-    //           }),
-    //         ]),
-    //     } as ColumnDef<ProductionsRow>,
-    //   ]
-    //   : []),
   ]
   return cols
 }

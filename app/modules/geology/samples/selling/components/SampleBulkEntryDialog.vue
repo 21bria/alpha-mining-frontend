@@ -220,7 +220,7 @@ async function fetchSampleTypes(row: RowState, q = "") {
         q,
         page: 1,
         page_size: 20,
-        category: ["selling"],
+        usage: "selling,monitoring",
         value_key: "id",
         label_key: "type_sample",
       },
@@ -243,6 +243,8 @@ async function fetchMaterials(row: RowState, q = "") {
         q,
         page: 1,
         page_size: 20,
+        is_ore: true,
+        is_production: true,
         value_key: "id",
         label_key: "name",
       },
@@ -256,27 +258,6 @@ async function fetchMaterials(row: RowState, q = "") {
   }
 }
 
-// async function fetchDischargeAreas(q = "") {
-//   dischargeAreaLoading.value = true
-//   try {
-//     const res: any = await request("/api/master/lookups/selling-discharge/", {
-//       method: "GET",
-//       query: {
-//         q,
-//         page: 1,
-//         page_size: 50,
-//         value_key: "id",
-//         label_key: "factory_stock",
-//       },
-//     })
-
-//     dischargeAreaOptions.value = (res?.results ?? []).map((item: any) =>
-//       toLookupOption(item, ["id"], ["factory_stock", "name"])
-//     )
-//   } finally {
-//     dischargeAreaLoading.value = false
-//   }
-// }
 
 async function fetchDischargeAreas(row: RowState, q = "") {
   row.dischargeAreaLoading = true

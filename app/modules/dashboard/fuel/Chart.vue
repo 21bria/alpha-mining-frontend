@@ -227,7 +227,7 @@ watch(
 .chart-mask {
   width: 100%;
   min-width: 600px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* hide scrollbar semua browser */

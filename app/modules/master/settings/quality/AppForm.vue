@@ -10,18 +10,17 @@ import { useNotify } from "@/composables/useNotify"
 import { useApi } from "@/composables/useApi"
 import { useAuthStore } from "@/stores/auth"
 
-import SampleTypeFormDialog, {
-  type SampleTypePayload,
-} from "@/modules/master/sample/type/components/SampleTypeDialog.vue"
-import SampleTypeMethodsDialog from "@/modules/master/sample/type/components/SampleTypeMethodsDialog.vue"
+import FormDialog, {
+  type QualityConfigPayload,
+} from "@/modules/master/settings/quality/components/FormDialog.vue"
 
 import {
-  getSampleTypeColumns,
-  type SampleTypeRow,
-} from "@/modules/master/sample/type/columns"
+  getQualityConfigColumns,
+   type QualityConfigRow,
+} from "@/modules/master/settings/quality/columns"
 
-import { sampleTypeConfig } from "@/modules/master/sample/type/table"
-import { sampleTypeFilters } from "@/modules/master/sample/type/filters"
+import { qualityConfig } from "@/modules/master/settings/quality/table"
+import { qualityFilters } from "@/modules/master/settings/quality/filters"
 
 const { request } = useApi()
 const notify = useNotify()
@@ -35,7 +34,7 @@ type ApiList<T> = {
 const role = computed(() => (auth.user?.role ?? "SITE_USER") as any)
 const canMutate = computed(() => role.value !== "GLOBAL_VIEWER")
 
-const rows = ref<SampleTypeRow[]>([])
+const rows = ref<QualityConfigRow[]>([])
 const total = ref(0)
 const totalPages = ref(1)
 
@@ -44,7 +43,7 @@ const pageSize = ref(10)
 const search = ref("")
 const ordering = ref<string | null>(null)
 const serverFilters = ref<Record<string, any>>({
-  ...(sampleTypeConfig.defaultQuery ?? {}),
+  ...(qualityConfig.defaultQuery ?? {}),
 })
 
 const query = computed(() => ({
@@ -55,9 +54,9 @@ const query = computed(() => ({
   ...serverFilters.value,
 }))
 
-const { data, pending, error, refresh } = await useAsyncData<ApiList<SampleTypeRow>>(
-  () => `sample-type:${JSON.stringify(query.value)}`,
-  () => request(sampleTypeConfig.endpoint, { method: "GET", query: query.value }),
+const { data, pending, error, refresh } = await useAsyncData<ApiList<QualityConfigRow>>(
+  () => `quality-config:${JSON.stringify(query.value)}`,
+  () => request(qualityConfig.endpoint, { method: "GET", query: query.value }),
   { server: false }
 )
 
@@ -84,7 +83,7 @@ function onApply({ search: s, filters }: any) {
 
 function onReset() {
   search.value = ""
-  serverFilters.value = { ...(sampleTypeConfig.defaultQuery ?? {}) }
+  serverFilters.value = { ...(qualityConfig.defaultQuery ?? {}) }
   page.value = 1
   refresh()
 }
@@ -101,7 +100,7 @@ function onSort({ key, dir }: { key: string | null; dir: "asc" | "desc" | null }
 
 const dialogOpen = ref(false)
 const mode = ref<"create" | "edit">("create")
-const selected = ref<SampleTypeRow | null>(null)
+const selected = ref<QualityConfigRow | null>(null)
 const formLoading = ref(false)
 const formErrors = ref<Record<string, any> | null>(null)
 
@@ -114,7 +113,7 @@ function openCreate() {
   dialogOpen.value = true
 }
 
-function openEdit(row: SampleTypeRow) {
+function openEdit(row: QualityConfigRow) {
   if (!canMutate.value) return
 
   formErrors.value = null
@@ -123,7 +122,7 @@ function openEdit(row: SampleTypeRow) {
   dialogOpen.value = true
 }
 
-async function submit(payload: SampleTypePayload) {
+async function submit(payload: QualityConfigPayload) {
   if (!canMutate.value) return
 
   formLoading.value = true
@@ -131,17 +130,17 @@ async function submit(payload: SampleTypePayload) {
 
   try {
     if (mode.value === "create") {
-      await request(sampleTypeConfig.endpoint, {
+      await request(qualityConfig.endpoint, {
         method: "POST",
         body: payload,
       })
-      notify.success(`Sample type "${payload.type_sample}" created`)
+      notify.success(`Quality config "${payload.name}" created`)
     } else {
-      await request(`${sampleTypeConfig.endpoint}${payload.id}/`, {
+      await request(`${qualityConfig.endpoint}${payload.id}/`, {
         method: "PATCH",
         body: payload,
       })
-      notify.success(`Sample type "${payload.type_sample}" updated`)
+      notify.success(`Quality config "${payload.name}" updated`)
     }
 
     dialogOpen.value = false
@@ -156,15 +155,15 @@ async function submit(payload: SampleTypePayload) {
 
 // delete single
 const deleteOpen = ref(false)
-const selectedDelete = ref<SampleTypeRow | null>(null)
+const selectedDelete = ref<QualityConfigRow | null>(null)
 
-function remove(row: SampleTypeRow) {
+function remove(row: QualityConfigRow) {
   selectedDelete.value = row
   deleteOpen.value = true
 }
 
 async function deleteRows(ids: (string | number)[]) {
-  return request("/api/masters/sample-types/bulk-delete/", {
+  return request(`${qualityConfig.endpoint}bulk-delete/`, {
     method: "POST",
     body: {
       ids,
@@ -178,7 +177,7 @@ async function confirmDelete() {
 
   try {
     await deleteRows([selectedDelete.value.id])
-    notify.success(`Sample type "${selectedDelete.value.type_sample}" deleted`)
+    notify.success(`Quality config "${selectedDelete.value.name}" deleted`)
     deleteOpen.value = false
     selectedDelete.value = null
     await refresh()
@@ -213,7 +212,7 @@ async function confirmBulkDelete() {
   bulkDeleting.value = true
   try {
     await deleteRows(bulkDeleteIds.value)
-    notify.success(`${bulkDeleteIds.value.length} sample type row(s) deleted`)
+    notify.success(`${bulkDeleteIds.value.length} quality config row(s) deleted`)
     bulkDeleteOpen.value = false
     bulkDeleteIds.value = []
     await refresh()
@@ -223,21 +222,13 @@ async function confirmBulkDelete() {
     bulkDeleting.value = false
   }
 }
-// Detail
-const methodDialogOpen = ref(false)
-const selectedTypeForMethods = ref<SampleTypeRow | null>(null)
 
-function openMethods(row: SampleTypeRow) {
-  selectedTypeForMethods.value = row
-  methodDialogOpen.value = true
-}
 
 const columns = computed(() =>
-  getSampleTypeColumns(
+  getQualityConfigColumns(
     {
       onEdit: openEdit,
       onDelete: remove,
-      onOpenMethods: openMethods,
     },
     role.value
   )
@@ -254,8 +245,13 @@ watchEffect(() => {
   <div class="w-full flex flex-col items-stretch gap-4">
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-lg font-semibold">Sample Type</h3>
-        <p class="text-sm text-muted-foreground">Manage sample type.</p>
+        <h3 class="text-lg font-semibold">
+          Quality Configuration
+        </h3>
+
+        <p class="text-sm text-muted-foreground">
+          Manage quality, material, selling and monitoring mappings.
+        </p>
       </div>
     </div>
 
@@ -268,7 +264,7 @@ watchEffect(() => {
       :pageSize="pageSize"
       :search="search"
       :loading="pending"
-      :filtersSchema="sampleTypeFilters"
+      :filtersSchema="qualityFilters"
       :showImport="false"
       :showExport="false"
       :showDownloadTemplate="false"
@@ -284,7 +280,7 @@ watchEffect(() => {
       @bulk-delete="askBulkDelete"
     />
 
-    <SampleTypeFormDialog
+    <FormDialog
       v-model:open="dialogOpen"
       :mode="mode"
       :role="role"
@@ -294,29 +290,23 @@ watchEffect(() => {
       @submit="submit"
     />
 
-    <SampleTypeMethodsDialog
-      v-model:open="methodDialogOpen"
-      :sample-type="selectedTypeForMethods"
-      :role="role"
-      @changed="refresh"
-    />
-    
     <div v-if="error" class="text-sm text-destructive">
       {{ (error as any)?.message || "Failed to load data" }}
     </div>
 
     <ConfirmDelete
-      v-model:open="deleteOpen"
-      title="Delete Sample Type"
-      :description="`Are you sure you want to delete '${selectedDelete?.type_sample ?? selectedDelete?.id}'? This action cannot be undone.`"
-      @confirm="confirmDelete"
+        v-model:open="deleteOpen"
+        title="Delete Quality Config"
+        :description="`Are you sure you want to delete '${selectedDelete?.name ?? selectedDelete?.id}'? This action cannot be undone.`"
+        @confirm="confirmDelete"
     />
 
     <ConfirmDelete
       v-model:open="bulkDeleteOpen"
-      title="Bulk Delete Sample Type"
+      title="Bulk Delete Quality Config"
       :description="`Are you sure you want to delete ${bulkDeleteIds.length} row(s)? This action cannot be undone.`"
       @confirm="confirmBulkDelete"
     />
+    
   </div>
 </template>

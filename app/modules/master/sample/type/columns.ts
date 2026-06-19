@@ -10,11 +10,15 @@ import type { UserRole } from "@/utils/roles"
 export type SampleTypeRow = {
   id: number
   type_sample: string
-  category?: string | null
   description?: string | null
   status?: number | null
   total_methods?: number
   created_at?: string | null
+
+  is_production: boolean
+  is_geology: boolean
+  is_selling: boolean
+  is_monitoring: boolean
 }
 
 type ColumnActions = {
@@ -71,12 +75,55 @@ export function getSampleTypeColumns(
     },
 
     {
-      accessorKey: "category",
+      accessorKey: "is_production",
       header: ({ column }) =>
-        h(DataTableColumnHeader, { column, title: "Category" }),
+        h(DataTableColumnHeader, { column, title: "Production" }),
       enableSorting: true,
       cell: ({ row }) =>
-        h("div", {}, row.original.category ?? "-"),
+        h("span", {
+          class: row.original.is_production
+            ? "rounded-md bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600"
+            : "rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground",
+        }, row.original.is_production ? "Yes" : "No"),
+    },
+
+    {
+      accessorKey: "is_geology",
+      header: ({ column }) =>
+        h(DataTableColumnHeader, { column, title: "Geology" }),
+      enableSorting: true,
+      cell: ({ row }) =>
+        h("span", {
+          class: row.original.is_geology
+            ? "rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600"
+            : "rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground",
+        }, row.original.is_geology ? "Yes" : "No"),
+    },
+
+    {
+      accessorKey: "is_selling",
+      header: ({ column }) =>
+        h(DataTableColumnHeader, { column, title: "Selling" }),
+      enableSorting: true,
+      cell: ({ row }) =>
+        h("span", {
+          class: row.original.is_selling
+            ? "rounded-md bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-600"
+            : "rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground",
+        }, row.original.is_selling ? "Yes" : "No"),
+    },
+
+    {
+      accessorKey: "is_monitoring",
+      header: ({ column }) =>
+        h(DataTableColumnHeader, { column, title: "Monitoring" }),
+      enableSorting: true,
+      cell: ({ row }) =>
+        h("span", {
+          class: row.original.is_monitoring
+            ? "rounded-md bg-purple-500/10 px-2 py-1 text-xs font-medium text-purple-600"
+            : "rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground",
+        }, row.original.is_monitoring ? "Yes" : "No"),
     },
 
     {
@@ -108,14 +155,14 @@ export function getSampleTypeColumns(
         h("div", {}, getStatusLabel(row.original.status)),
     },
 
-    {
-      accessorKey: "description",
-      header: ({ column }) =>
-        h(DataTableColumnHeader, { column, title: "Description" }),
-      enableSorting: true,
-      cell: ({ row }) =>
-        h("div", { class: "max-w-[250px] truncate" }, row.original.description ?? "-"),
-    },
+    // {
+    //   accessorKey: "description",
+    //   header: ({ column }) =>
+    //     h(DataTableColumnHeader, { column, title: "Description" }),
+    //   enableSorting: true,
+    //   cell: ({ row }) =>
+    //     h("div", { class: "max-w-[250px] truncate" }, row.original.description ?? "-"),
+    // },
 
     {
       accessorKey: "created_at",

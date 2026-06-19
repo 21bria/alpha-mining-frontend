@@ -1,25 +1,25 @@
-
 <template>
   <div class="chart-mask">
     <ChartScrollWrapper v-if="isScrollable">
-      <component 
-      :is="chartComponent" 
-      v-if="chartData" 
-      :series="chartData.series" 
-      :categories="chartData.categories"
-      :colors="colors" 
+      <component
+        :is="chartComponent"
+        v-if="chartData"
+        :series="chartData.series"
+        :categories="chartData.categories"
+        :colors="colors"
       />
     </ChartScrollWrapper>
 
-    <!-- fallback kalau nggak scroll -->
-    <component v-else 
-      is="chartComponent" v-if="chartData" 
+    <component
+      v-else-if="chartData"
+      :is="chartComponent"
       :series="chartData.series"
-      :categories="chartData.categories" 
-      :colors="colors" 
-      />
+      :categories="chartData.categories"
+      :colors="colors"
+    />
   </div>
 </template>
+
 <script setup lang="ts">
 
 import { ref, watch, onMounted, computed, defineAsyncComponent } from 'vue'
@@ -247,7 +247,7 @@ watch(
 .chart-mask {
   width: 100%;
   min-width: 600px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* hide scrollbar semua browser */

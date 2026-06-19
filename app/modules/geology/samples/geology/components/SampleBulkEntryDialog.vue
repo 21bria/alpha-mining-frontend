@@ -213,7 +213,7 @@ async function fetchSampleTypes(row: RowState, q = "") {
         q,
         page: 1,
         page_size: 20,
-        category: ["geology", "production"],
+        usage: ["geology", "production"],
         value_key: "id",
         label_key: "type_sample",
       },

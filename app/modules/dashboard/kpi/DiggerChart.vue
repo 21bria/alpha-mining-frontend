@@ -156,6 +156,6 @@ watch(
 .chart-mask {
   width: 100%;
   min-width: 600px;
-  overflow-x: auto;
+  overflow: auto;
 }
 </style>

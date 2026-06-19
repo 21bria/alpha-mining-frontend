@@ -4,26 +4,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type MaterialPayload = {
   id?: number
   name: string
-  categories: string
+  is_ore: boolean
+  is_production: boolean
+  sale_adjust?: string | null
   description?: string | null
 }
 
 type MaterialFormState = {
   id?: number
   name: string
-  categories: string
-  description: string // UI selalu string (Textarea aman)
+  is_ore: boolean
+  is_production: boolean
+  sale_adjust: string
+  description: string
 }
 
 const props = defineProps<{
@@ -41,10 +39,11 @@ const emit = defineEmits<{
 
 const local = ref<MaterialFormState>({
   name: '',
-  categories: '',
+  is_ore: false,
+  is_production: true,
+  sale_adjust: '',
   description: '',
 })
-
 watch(
   () => props.open,
   (v) => {
@@ -52,8 +51,10 @@ watch(
     local.value = {
       id: props.initial?.id,
       name: props.initial?.name ?? '',
-      categories: props.initial?.categories ?? '',
-      description: props.initial?.description ?? '', // null -> ''
+      is_ore: props.initial?.is_ore ?? false,
+      is_production: props.initial?.is_production ?? true,
+      sale_adjust: props.initial?.sale_adjust ?? '',
+      description: props.initial?.description ?? '',
     }
   },
   { immediate: true }
@@ -65,15 +66,20 @@ const close = () => emit('update:open', false)
 
 const submit = () => {
   const name = local.value.name.trim()
-  const categories = local.value.categories.trim()
+  const is_ore = local.value.is_ore
+  const is_production = local.value.is_production
   const desc = local.value.description.trim()
+  const saleAdjust = local.value.sale_adjust.trim()
 
   emit('submit', {
     id: local.value.id,
     name,
-    categories,
-    description: desc === '' ? null : desc, // kosong -> null
+    is_ore: local.value.is_ore,
+    is_production: local.value.is_production,
+    sale_adjust: saleAdjust === '' ? null : saleAdjust.toUpperCase(),
+    description: desc === '' ? null : desc,
   })
+
 }
 
 const fieldError = (key: string) => {
@@ -98,24 +104,45 @@ const fieldError = (key: string) => {
             {{ fieldError('name') }}
           </p>
         </div>
-        <div class="grid gap-2">
-          <label class="text-sm font-medium">Category</label>
 
-          <Select v-model="local.categories">
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
+        <div class="grid gap-3 rounded-lg border p-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <label class="text-sm font-medium">Production Material</label>
+              <p class="text-xs text-muted-foreground">
+                go to production/mining summary.
+              </p>
+            </div>
 
-            <SelectContent>
-              <SelectItem value="Ore">Ore</SelectItem>
-              <SelectItem value="Non Ore">Non Ore</SelectItem>
-            </SelectContent>
-          </Select>
+            <Checkbox v-model="local.is_production" />
+          </div>
 
-          <p v-if="fieldError('categories')" class="text-sm text-destructive">
-            {{ fieldError('categories') }}
-          </p>
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <label class="text-sm font-medium">Ore Material</label>
+              <p class="text-xs text-muted-foreground">
+                LIM/SAP to ore, OB/Waste non-ore.
+              </p>
+            </div>
+
+            <Checkbox v-model="local.is_ore" />
+          </div>
+          
+          <div class="grid gap-2">
+            <label class="text-sm font-medium">Sale Adjust</label>
+            <Input
+              v-model="local.sale_adjust"
+              placeholder="e.g. HPAL / RKEF"
+            />
+            <p class="text-xs text-muted-foreground">
+              Used for quality/selling mapping. Example: LIM → HPAL, SAP → RKEF.
+            </p>
+            <p v-if="fieldError('sale_adjust')" class="text-sm text-destructive">
+              {{ fieldError('sale_adjust') }}
+            </p>
+          </div>
         </div>
+
         <div class="grid gap-2">
           <label class="text-sm font-medium">Description</label>
           <Textarea v-model="local.description" placeholder="Optional..." />
@@ -135,7 +162,7 @@ const fieldError = (key: string) => {
 
       <DialogFooter>
         <Button variant="outline" @click="close">Cancel</Button>
-        <Button :disabled="loading || !local.name.trim() ||!local.categories.trim()" @click="submit">
+        <Button :disabled="loading || !local.name.trim()" @click="submit">
           {{ loading ? 'Saving...' : 'Save' }}
         </Button>
       </DialogFooter>

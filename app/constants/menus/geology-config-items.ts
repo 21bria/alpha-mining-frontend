@@ -22,6 +22,13 @@ export const geologyConfigItems: GeologyConfigItem[] = [
     require: { any: ["master.view_oretruckfactor"] },
   },
   {
+    title: "Productions",
+    icon: "i-lucide-settings-2",
+    category: "Master",
+    link: "/master/settings/production",
+    require: { any: ["master.view_qualityconfig","geology.view_productionsconfig"] },
+  },
+  {
     title: "Ore Adjust",
     icon: "i-lucide-sliders-horizontal",
     category: "Adjustment",

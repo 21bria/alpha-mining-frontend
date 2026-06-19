@@ -128,7 +128,7 @@ export const menusMining: NavMenu[] = [
 
       {
         title: 'Configurations',
-        icon: 'i-lucide-settings',
+        icon: 'i-lucide-settings-2',
         require: {
           any: [
             "mining.view_unitactivity",

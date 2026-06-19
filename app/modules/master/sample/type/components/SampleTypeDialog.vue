@@ -20,22 +20,36 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { Checkbox } from "@/components/ui/checkbox"
+
 type UserRole = "SYSTEM" | "MANAGEMENT" | "GLOBAL_VIEWER" | "SITE_USER"
 
 export type SampleTypePayload = {
   id?: number
+
   type_sample: string
-  category?: string | null
+  batch_pattern?: string | null
   description?: string | null
   status?: number | null
+
+  is_production: boolean
+  is_geology: boolean
+  is_selling: boolean
+  is_monitoring: boolean
 }
 
 type SampleTypeFormState = {
   id?: number
+
   type_sample: string
-  category: string
+  batch_pattern: string
   description: string
   status: string
+
+  is_production: boolean
+  is_geology: boolean
+  is_selling: boolean
+  is_monitoring: boolean
 }
 
 const props = defineProps<{
@@ -65,10 +79,16 @@ const statusOptions = [
 
 const local = ref<SampleTypeFormState>({
   id: undefined,
+
   type_sample: "",
-  category: "",
+  batch_pattern: "",
   description: "",
   status: "1",
+
+  is_production: true,
+  is_geology: false,
+  is_selling: false,
+  is_monitoring: false,
 })
 
 function toNumberOrNull(v: any): number | null {
@@ -88,12 +108,18 @@ function close() {
 
 function submit() {
   const payload: SampleTypePayload = {
-    id: local.value.id,
-    type_sample: local.value.type_sample.trim(),
-    category: local.value.category.trim() || null,
-    description: local.value.description.trim() || null,
-    status: toNumberOrNull(local.value.status),
-  }
+  id: local.value.id,
+
+  type_sample: local.value.type_sample.trim(),
+  batch_pattern: local.value.batch_pattern.trim() || null,
+  description: local.value.description.trim() || null,
+  status: toNumberOrNull(local.value.status),
+
+  is_production: local.value.is_production,
+  is_geology: local.value.is_geology,
+  is_selling: local.value.is_selling,
+  is_monitoring: local.value.is_monitoring,
+}
 
   emit("submit", payload)
 }
@@ -105,10 +131,16 @@ watch(
 
     local.value = {
       id: props.initial?.id,
+
       type_sample: props.initial?.type_sample ?? "",
-      category: props.initial?.category ?? "",
+      batch_pattern: props.initial?.batch_pattern ?? "",
       description: props.initial?.description ?? "",
       status: String(props.initial?.status ?? 1),
+
+      is_production: props.initial?.is_production ?? true,
+      is_geology: props.initial?.is_geology ?? false,
+      is_selling: props.initial?.is_selling ?? false,
+      is_monitoring: props.initial?.is_monitoring ?? false,
     }
   },
   { immediate: true }
@@ -131,12 +163,48 @@ watch(
           </p>
         </div>
 
-        <div class="grid gap-2">
-          <label class="text-sm font-medium">Category</label>
-          <Input v-model="local.category" placeholder="Enter category" :disabled="!canMutate" />
-          <p v-if="fieldError('category')" class="text-sm text-destructive">
-            {{ fieldError('category') }}
-          </p>
+        <div class="grid gap-3 rounded-lg border p-4">
+          <label class="text-sm font-semibold">
+            Usage
+          </label>
+
+          <div class="grid grid-cols-2 gap-4">
+           <label class="flex items-center gap-2">
+            <Checkbox
+              :model-value="local.is_production"
+              :disabled="!canMutate"
+              @update:model-value="(v) => (local.is_production = v === true)"
+            />
+            <span>Production</span>
+          </label>
+
+          <label class="flex items-center gap-2">
+            <Checkbox
+              :model-value="local.is_geology"
+              :disabled="!canMutate"
+              @update:model-value="(v) => (local.is_geology = v === true)"
+            />
+            <span>Geology</span>
+          </label>
+
+          <label class="flex items-center gap-2">
+            <Checkbox
+              :model-value="local.is_selling"
+              :disabled="!canMutate"
+              @update:model-value="(v) => (local.is_selling = v === true)"
+            />
+            <span>Selling</span>
+          </label>
+
+          <label class="flex items-center gap-2">
+            <Checkbox
+              :model-value="local.is_monitoring"
+              :disabled="!canMutate"
+              @update:model-value="(v) => (local.is_monitoring = v === true)"
+            />
+            <span>Monitoring</span>
+          </label>
+          </div>
         </div>
 
         <div class="grid gap-2">
@@ -156,6 +224,27 @@ watch(
           </p>
         </div>
 
+        <div class="grid gap-2">
+          <label class="text-sm font-medium">
+            Batch Pattern
+          </label>
+
+          <Input
+            v-model="local.batch_pattern"
+            placeholder="{type}{material}{truck}{point}{batch}"
+          />
+
+          <p class="text-xs text-muted-foreground">
+            Available:
+            {type},
+            {material},
+            {truck},
+            {point},
+            {batch},
+            {increments},
+            {lot}
+          </p>
+        </div>
         <div class="grid gap-2">
           <label class="text-sm font-medium">Description</label>
           <Textarea v-model="local.description" placeholder="Description" :disabled="!canMutate" />

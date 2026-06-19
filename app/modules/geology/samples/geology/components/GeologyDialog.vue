@@ -271,9 +271,9 @@ function getInitialLabel(...keys: string[]) {
   }
   return ""
 }
-// ======================
+
 // IUP LOOKUP
-// ======================
+
 const mineIUPOptions = ref<Array<{ value: number; label: string }>>([])
 const mineIUPLoading = ref(false)
 const mineIUPSearch = ref("")
@@ -324,12 +324,13 @@ function onMineIUPScroll(e: Event) {
     fetchMineIUP(mineIUPSearch.value, mineIUPPage.value + 1)
   }
 }
-/** =========================
- * FETCH: SAMPLE TYPE
- * ========================= */
+
+// FETCH: SAMPLE TYPE
 async function fetchSampleTypes(q = "", page = 1) {
   if (sampleTypeLoading.value) return
+
   sampleTypeLoading.value = true
+
   try {
     const res: any = await request("/api/master/lookups/sample-type/", {
       method: "GET",
@@ -337,6 +338,7 @@ async function fetchSampleTypes(q = "", page = 1) {
         q,
         page,
         page_size: 10,
+         usage: "production,geology",
         value_key: "id",
         label_key: "type_sample",
       },
@@ -347,6 +349,7 @@ async function fetchSampleTypes(q = "", page = 1) {
     )
 
     const count = Number(res?.count ?? 0)
+
     assignPagedOptions(sampleTypeOptions, items, page)
     sampleTypePage.value = page
     sampleTypeHasMore.value = computeHasMore(sampleTypeOptions.value.length, count)

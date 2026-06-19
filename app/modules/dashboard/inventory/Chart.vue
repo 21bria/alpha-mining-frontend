@@ -1,14 +1,3 @@
-<!-- <template>
-  <div class="chart-mask" :class="{ scrollable: isScrollable }">
-    <component 
-    :is="BaseLineColumnArea" 
-    v-if="chartData" 
-    :series="chartData.series" 
-    :categories="chartData.categories"
-    :colors="colors" />
-  </div>
-</template> -->
-
 
 <template>
   <div class="chart-mask">
@@ -165,7 +154,7 @@ watch(
 .chart-mask {
   width: 100%;
   min-width: 600px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* hide scrollbar semua browser */

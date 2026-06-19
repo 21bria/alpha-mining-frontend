@@ -19,6 +19,8 @@ export const menusGeology: NavMenu[] = [
         "geology.view_domestatusfinish",
         "master.view_oreclass",
         "master.view_oretruckfactor",
+        "geology.view_productionsconfig",
+        "geology.view_qualityconfig",
       ],
     },
     items: [
@@ -68,7 +70,7 @@ export const menusGeology: NavMenu[] = [
       },
       {
         title: "Settings",
-        icon: "i-lucide-settings",
+        icon: "i-lucide-settings-2",
         link: "/geology/configurations",
         require: {
           any: [
