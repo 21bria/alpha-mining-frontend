@@ -3,6 +3,7 @@ import { h } from "vue"
 import { Checkbox } from "@/components/ui/checkbox"
 import DataTableColumnHeader from "@/components/data-table/DataTableColumnHeader.vue"
 import DataTableRowActions from "./components/DataTableRowActions.vue"
+import { formatDate, formatDateTime } from "@/utils/formatDate.js"
 import type { UserRole } from "@/utils/roles"
 
 export type CodeAdjustmentRow = {
@@ -94,14 +95,6 @@ export function getCodeAdjustmentColumns(
 
     ...(showIup
       ? [
-          // {
-          //   accessorKey: "iup_code",
-          //   header: ({ column }: any) =>
-          //     h(DataTableColumnHeader, { column, title: "IUP Code" }),
-          //   enableSorting: true,
-          //   cell: ({ row }: any) =>
-          //     h("div", { class: "font-medium" }, row.original.iup_code ?? "-"),
-          // },
           {
             accessorKey: "iup_name",
             header: ({ column }: any) =>
@@ -232,7 +225,7 @@ export function getCodeAdjustmentColumns(
         h(
           "div",
           { class: "text-muted-foreground" },
-          row.original.created_at ?? "-"
+          formatDateTime(row.original.created_at) ?? "-"
         ),
     },
 

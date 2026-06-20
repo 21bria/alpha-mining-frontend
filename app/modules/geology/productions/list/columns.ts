@@ -27,7 +27,7 @@ export type ProductionsRow = {
   ritase: number
   tonnage: number
   batch_status: string
-  sample_id: string
+  sample_number: string
   remarks: string
 }
 
@@ -182,10 +182,10 @@ export function getProductionsColumns(
       cell: ({ row }) => h('div', { class: 'font-medium' }, row.original.batch_status),
     },
     {
-      accessorKey: 'sample_id',
+      accessorKey: 'sample_number',
       header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Sample ID' }),
       enableSorting: true,
-      cell: ({ row }) => h('div', { class: 'font-medium' }, row.original.sample_id),
+      cell: ({ row }) => h('div', { class: 'font-medium' }, row.original.sample_number),
     },
 
     {

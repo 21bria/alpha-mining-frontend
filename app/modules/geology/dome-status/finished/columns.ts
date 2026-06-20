@@ -3,6 +3,7 @@ import { h } from "vue"
 import { Checkbox } from "@/components/ui/checkbox"
 import DataTableColumnHeader from "@/components/data-table/DataTableColumnHeader.vue"
 import DataTableRowActions from "./components/DataTableRowActions.vue"
+import { formatDate, formatDateTime } from "@/utils/formatDate.js"
 import type { UserRole } from "@/utils/roles"
 
 export type DomeFinishedRow = {
@@ -134,7 +135,7 @@ export function getDomeFinishedColumns(
         h(DataTableColumnHeader, { column, title: "Created At" }),
       enableSorting: true,
       cell: ({ row }) =>
-        h("div", { class: "text-muted-foreground" }, row.original.created_at ?? "-"),
+        h("div", { class: "text-muted-foreground" }, formatDateTime(row.original.created_at ?? "-")),
     },
 
     ...(canMutate

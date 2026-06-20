@@ -99,13 +99,16 @@ export const reportItems: ReportItem[] = [
   },
 
   {
-    title: "Dome sample",
+    title: "Sample anomaly",
     icon: "i-lucide-ticket",
     category: "Quality",
     new: true,
-    link: "/report/quality/samples/dome",
+    link: "/report/quality/samples",
     require: {
-      any: ["geology.view_samplesdomeview"],
+      any: [
+        "geology.view_samplesdomeview",
+        "geology.view_samplespdsnaview"
+      ],
     },
   },
   {

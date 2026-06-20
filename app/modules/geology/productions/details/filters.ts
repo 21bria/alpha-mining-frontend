@@ -6,7 +6,7 @@ export const productionsFilters: FilterSchema[] = [
     key: "material",
     label: "Material",
     kind: "select",
-    endpoint: "/api/master/lookups/material/?value_key=name&label_key=name&category=ORE",
+    endpoint: "/api/master/lookups/material/?value_key=name&label_key=name&is_ore=true&is_production=true",
     multiple: true,
     placement: "top",
   },

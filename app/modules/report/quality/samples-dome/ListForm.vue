@@ -163,56 +163,53 @@ watch(error, (v) => {
 
 <template>
 <div class="space-y-4">
-  <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-2xl font-normal tracking-tight">
-          Samples of dome data
-          <span class="text-xl">✨</span>
-        </h2>
-        <p class="text-sm text-muted-foreground">
-          View and manage samples of dome records efficiently.
-        </p>
+<div class="flex justify-end">
+  <!-- summary -->
+  <div class="grid w-full grid-cols-1 overflow-hidden rounded-2xl border sm:grid-cols-3 xl:w-auto">
+    <!-- Sample -->
+    <div class="min-w-[150px] px-5 py-4">
+      <div class="flex items-center gap-2">
+        <ClipboardCopy class="h-4 w-4 text-blue-500" />
+        <p class="text-sm text-muted-foreground">Sample</p>
       </div>
-
-    <!-- summary -->
-    <div class="grid w-full grid-cols-1 overflow-hidden rounded-2xl border sm:grid-cols-3 xl:w-auto">
-        <!-- Sample -->
-        <div class="px-5 py-4 min-w-[150px]">
-          <div class="flex items-center gap-2">
-            <ClipboardCopy class="h-4 w-4 text-blue-500" />
-            <p class="text-sm text-muted-foreground">Sample</p>
-          </div>
-          <p class="mt-1 text-lg font-semibold text-gray-800 dark:text-white">
-            {{ formatShortNumber(summary.total_sample) || 0 }}
-          </p>
-        </div>
-        <!-- Released -->
-        <div class="border-t px-5 py-4 min-w-[150px] sm:border-l sm:border-t-0">
-          <div class="flex items-center gap-2">
-            <CheckCircle2 class="h-4 w-4 text-green-500" />
-            <p class="text-sm text-muted-foreground">Released</p>
-          </div>
-          <p class="mt-1 text-lg font-semibold text-green-600 dark:text-green-400">
-            {{ formatShortNumber(summary.total_assay) || 0 }}
-          </p>
-        </div>
-      <!-- Pending -->
-       <div class="border-t px-5 py-4 min-w-[150px] sm:border-l sm:border-t-0">
-          <div class="flex items-center gap-2">
-            <AlertCircle class="h-4 w-4":class=" summary.difference > 0? 'text-red-500': 'text-green-500'"/>
-            <p class="text-sm text-muted-foreground">Pending</p>
-          </div>
-          <p
-            class="mt-1 text-lg font-semibold" 
-            :class="summary.difference > 0 ? 'text-red-600 dark:text-red-400': 'text-green-600 dark:text-green-400'"
-          >
-          {{ formatShortNumber(summary.difference) || 0 }}
-          </p>
-      </div>
-      
+      <p class="mt-1 text-lg font-semibold text-gray-800 dark:text-white">
+        {{ formatShortNumber(summary.total_sample) || 0 }}
+      </p>
     </div>
 
+    <!-- Released -->
+    <div class="min-w-[150px] border-t px-5 py-4 sm:border-l sm:border-t-0">
+      <div class="flex items-center gap-2">
+        <CheckCircle2 class="h-4 w-4 text-green-500" />
+        <p class="text-sm text-muted-foreground">Released</p>
+      </div>
+      <p class="mt-1 text-lg font-semibold text-green-600 dark:text-green-400">
+        {{ formatShortNumber(summary.total_assay) || 0 }}
+      </p>
+    </div>
+
+    <!-- Pending -->
+    <div class="min-w-[150px] border-t px-5 py-4 sm:border-l sm:border-t-0">
+      <div class="flex items-center gap-2">
+        <AlertCircle
+          class="h-4 w-4"
+          :class="summary.difference > 0 ? 'text-red-500' : 'text-green-500'"
+        />
+        <p class="text-sm text-muted-foreground">Pending</p>
+      </div>
+      <p
+        class="mt-1 text-lg font-semibold"
+        :class="
+          summary.difference > 0
+            ? 'text-red-600 dark:text-red-400'
+            : 'text-green-600 dark:text-green-400'
+        "
+      >
+        {{ formatShortNumber(summary.difference) || 0 }}
+      </p>
+    </div>
   </div>
+</div>
 
   <DataTableMaster 
     :columns="columns" 

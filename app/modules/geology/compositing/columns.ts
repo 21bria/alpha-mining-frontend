@@ -3,6 +3,7 @@ import { h } from "vue"
 import { Checkbox } from "@/components/ui/checkbox"
 import DataTableColumnHeader from "@/components/data-table/DataTableColumnHeader.vue"
 import DataTableRowActions from "./components/DataTableRowActions.vue"
+import { formatDate, formatDateTime } from "@/utils/formatDate.js"
 import type { UserRole } from "@/utils/roles"
 
 export type DomeMergeRow = {
@@ -99,14 +100,6 @@ export function getDomeMergeColumns(
 
     ...(showIup
       ? [
-        // {
-        //   accessorKey: "iup_code",
-        //   header: ({ column }) =>
-        //     h(DataTableColumnHeader, { column, title: "IUP Code" }),
-        //   enableSorting: true,
-        //   cell: ({ row }) =>
-        //     h("div", { class: "text-muted-foreground" }, row.original.iup_code ?? "-"),
-        // } as ColumnDef<DomeMergeRow>,
         {
           accessorKey: "iup_name",
           header: ({ column }) =>
@@ -214,7 +207,7 @@ export function getDomeMergeColumns(
         h(DataTableColumnHeader, { column, title: "Created At" }),
       enableSorting: true,
       cell: ({ row }) =>
-        h("div", { class: "text-muted-foreground" }, row.original.created_at ?? "-"),
+        h("div", { class: "text-muted-foreground" }, formatDateTime(row.original.created_at ?? "-")),
     },
 
     ...(canMutate
