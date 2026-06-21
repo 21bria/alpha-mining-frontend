@@ -41,6 +41,13 @@ export const masterItems: MasterItem[] = [
     require: { any: ["master.view_sourceminesloading"] },
   },
   {
+    title: "Pit Dome",
+    icon: "i-lucide-git-pull-request-create-arrow",
+    category: "Sources",
+    link: "/master/sources/mine-pit-dome",
+    require: { any: ["master.view_sourceminesloading"] },
+  },
+  {
     title: "Dumping Points",
     icon: "i-lucide-map-pinned",
     category: "Sources",

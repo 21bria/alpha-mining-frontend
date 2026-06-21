@@ -22,6 +22,7 @@ export type ProductionPayload = {
   shift: string | null
   id_block: number | null
   id_prospect_area: number | null
+  id_pit_dome: number | null
   from_rl: number | null
   to_rl: number | null
   id_material: number | null
@@ -57,6 +58,7 @@ type FormState = {
   shift: string
   id_block: string
   id_prospect_area: string
+  id_pit_dome: string
   from_rl: string
   to_rl: string
   id_material: string
@@ -208,6 +210,7 @@ const local = ref<FormState>({
   shift: "",
   id_block: "",
   id_prospect_area: "",
+  id_pit_dome: "",
   from_rl: "",
   to_rl: "",
   id_material: "",
@@ -395,6 +398,71 @@ function onProspectScroll(e: Event) {
   const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40
   if (nearBottom && prospectHasMore.value && !prospectLoading.value) {
     fetchProspects(prospectSearch.value, prospectPage.value + 1)
+  }
+}
+
+/* PIT DOME */
+const pitDomeOptions = ref<LookupOption[]>([])
+const pitDomeLoading = ref(false)
+const pitDomeSearch = ref("")
+const pitDomePage = ref(1)
+const pitDomeHasMore = ref(true)
+
+async function fetchPitDomes(q = "", page = 1) {
+  if (!local.value.id_prospect_area) {
+    pitDomeOptions.value = []
+    local.value.id_pit_dome = ""
+    return
+  }
+
+  if (pitDomeLoading.value) return
+  pitDomeLoading.value = true
+
+  try {
+    const res: any = await request("/api/master/lookups/mine-pit-dome/", {
+      method: "GET",
+      query: {
+        q,
+        page,
+        page_size: 10,
+        loading_point: local.value.id_prospect_area,
+        value_key: "id",
+        label_key: "dome",
+      },
+    })
+
+    const items = (res?.results ?? []).map((item: any) =>
+      toLookupOption(item, ["id"], ["dome"])
+    )
+
+    assignPagedOptions(pitDomeOptions, items, page)
+    pitDomePage.value = page
+    pitDomeHasMore.value = computeHasMore(
+      pitDomeOptions.value.length,
+      Number(res?.count ?? 0)
+    )
+
+    const first = pitDomeOptions.value[0]
+    if (!local.value.id_pit_dome && first) {
+      local.value.id_pit_dome = first.value
+    }
+  } finally {
+    pitDomeLoading.value = false
+  }
+}
+
+const onPitDomeSearch = useDebounceFn((q: string) => {
+  pitDomePage.value = 1
+  pitDomeHasMore.value = true
+  fetchPitDomes(q, 1)
+}, 300)
+
+function onPitDomeScroll(e: Event) {
+  const el = e.target as HTMLElement
+  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40
+
+  if (nearBottom && pitDomeHasMore.value && !pitDomeLoading.value) {
+    fetchPitDomes(pitDomeSearch.value, pitDomePage.value + 1)
   }
 }
 
@@ -770,6 +838,7 @@ watch(
 
     resetPagedLookup(blockOptions, blockPage, blockHasMore, blockSearch)
     resetPagedLookup(prospectOptions, prospectPage, prospectHasMore, prospectSearch)
+    resetPagedLookup(pitDomeOptions,pitDomePage,pitDomeHasMore,pitDomeSearch)
     resetPagedLookup(pileOptions, pilePage, pileHasMore, pileSearch)
     resetPagedLookup(categoryOptions, categoryPage, categoryHasMore, categorySearch)
     resetPagedLookup(truckFactorOptions, truckFactorPage, truckFactorHasMore, truckFactorSearch)
@@ -820,6 +889,7 @@ watch(
 
     resetPagedLookup(oreClassOptions, oreClassPage, oreClassHasMore, oreClassSearch)
     resetPagedLookup(truckFactorOptions, truckFactorPage, truckFactorHasMore, truckFactorSearch)
+    resetPagedLookup(pitDomeOptions,pitDomePage,pitDomeHasMore,pitDomeSearch)
 
     if (val) {
       await Promise.all([
@@ -830,6 +900,26 @@ watch(
   }
 )
 
+watch(
+  () => local.value.id_prospect_area,
+  async (val, oldVal) => {
+    if (isInitializing.value) return
+    if (val === oldVal) return
+
+    local.value.id_pit_dome = ""
+
+    resetPagedLookup(
+      pitDomeOptions,
+      pitDomePage,
+      pitDomeHasMore,
+      pitDomeSearch
+    )
+
+    if (val) {
+      await fetchPitDomes("", 1)
+    }
+  }
+)
 /* SUBMIT */
 function submit() {
   const payload: ProductionPayload = {
@@ -839,6 +929,7 @@ function submit() {
     shift: local.value.shift || null,
     id_block: toNumberOrNull(local.value.id_block),
     id_prospect_area: toNumberOrNull(local.value.id_prospect_area),
+    id_pit_dome: toNumberOrNull(local.value.id_pit_dome),
     from_rl: toNumberOrNull(local.value.from_rl),
     to_rl: toNumberOrNull(local.value.to_rl),
     id_material: toNumberOrNull(local.value.id_material),
@@ -885,6 +976,7 @@ watch(
         shift: getInitialString("shift"),
         id_block: getInitialString("id_block"),
         id_prospect_area: getInitialString("id_prospect_area"),
+        id_pit_dome: getInitialString("id_pit_dome"),
         from_rl: getInitialString("from_rl"),
         to_rl: getInitialString("to_rl"),
         id_material: getInitialString("id_material"),
@@ -915,6 +1007,7 @@ watch(
 
       resetPagedLookup(blockOptions, blockPage, blockHasMore, blockSearch)
       resetPagedLookup(prospectOptions, prospectPage, prospectHasMore, prospectSearch)
+      resetPagedLookup(pitDomeOptions, pitDomePage, pitDomeHasMore, pitDomeSearch)
       resetPagedLookup(materialOptions, materialPage, materialHasMore, materialSearch)
       resetPagedLookup(pileOptions, pilePage, pileHasMore, pileSearch)
       resetPagedLookup(oreClassOptions, oreClassPage, oreClassHasMore, oreClassSearch)
@@ -930,6 +1023,20 @@ watch(
         fetchCategories("", 1),
         fetchGradeControls("", 1),
       ])
+
+      if (local.value.id_prospect_area) {
+        await fetchPitDomes("", 1)
+
+        ensureOptionExists(
+          pitDomeOptions,
+          local.value.id_pit_dome,
+          getInitialLabel(
+            "pit_dome_label",
+            "id_pit_dome_label",
+            "dome"
+          )
+        )
+      }
 
       ensureOptionExists(blockOptions, local.value.id_block, getInitialLabel("block_label"))
       ensureOptionExists(prospectOptions, local.value.id_prospect_area, getInitialLabel("prospect_label"))
@@ -1090,6 +1197,42 @@ watch(
             </Select>
             <p v-if="fieldError('id_prospect_area')" class="text-sm text-destructive">
               {{ fieldError("id_prospect_area") }}
+            </p>
+          </div>
+
+          <div class="grid gap-2">
+            <label class="text-sm font-medium">Pit Dome</label>
+
+            <Select
+              v-model="local.id_pit_dome"
+              :disabled="pitDomeLoading || !canMutate || !local.id_prospect_area"
+            >
+              <SelectTrigger class="h-9">
+                <SelectValue :placeholder="pitDomeLoading ? 'Loading...' : 'Select Pit Dome'" />
+              </SelectTrigger>
+
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onPitDomeScroll">
+                <SelectGroup>
+                  <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
+                    <Input
+                      v-model="pitDomeSearch"
+                      placeholder="Search Pit Dome..."
+                      class="h-8"
+                      @input="onPitDomeSearch(pitDomeSearch)"
+                      @keydown.stop
+                      @click.stop
+                    />
+                  </div>
+
+                  <SelectItem v-for="o in pitDomeOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <p v-if="fieldError('id_pit_dome')" class="text-sm text-destructive">
+              {{ fieldError("id_pit_dome") }}
             </p>
           </div>
 
@@ -1314,6 +1457,7 @@ watch(
           !local.tgl_production ||
           !local.shift ||
           !local.id_prospect_area ||
+          !local.id_pit_dome ||
           !local.id_block ||
           !local.id_material ||
           !local.id_pile ||

@@ -38,6 +38,7 @@ type ProductionPayload = {
   shift: string | null
   id_block: number | null
   id_prospect_area: number | null
+  id_pit_dome: number | null
   from_rl: number | null
   to_rl: number | null
   id_material: number | null
@@ -74,6 +75,7 @@ type ProductionDetail = {
   id_block?: number | null
   block_label?: string | null
   id_prospect_area?: number | null
+  id_pit_dome?: number | null
   prospect_label?: string | null
   from_rl?: number | null
   to_rl?: number | null

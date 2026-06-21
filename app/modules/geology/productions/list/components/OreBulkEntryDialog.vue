@@ -16,6 +16,7 @@ type RowState = {
   category: string
   shift: string
   id_prospect_area: string
+  id_pit_dome: string
   id_block: string
   from_rl: string
   to_rl: string
@@ -40,18 +41,21 @@ type RowState = {
   truckFactorLoading: boolean 
 
   prospectOptions: LookupOption[]
+  pitDomeOptions: LookupOption[]
   blockOptions: LookupOption[]
   materialOptions: LookupOption[]
   gradeControlOptions: LookupOption[]
   pileOptions: LookupOption[]
 
   prospectLoading: boolean
+  pitDomeLoading: boolean
   blockLoading: boolean
   materialLoading: boolean
   gradeControlLoading: boolean
   pileLoading: boolean
 
   prospectSearch: string
+  pitDomeSearch: string
   blockSearch: string
   materialSearch: string
   gradeControlSearch: string
@@ -85,6 +89,7 @@ function emptyRow(): RowState {
     category: "",
     shift: "",
     id_prospect_area: "",
+    id_pit_dome: "",
     id_block: "",
     from_rl: "",
     to_rl: "",
@@ -109,22 +114,26 @@ function emptyRow(): RowState {
     truckFactorLoading: false,
 
     prospectOptions: [],
+    pitDomeOptions: [],
     blockOptions: [],
     materialOptions: [],
     gradeControlOptions: [],
     pileOptions: [],
 
     prospectLoading: false,
+    pitDomeLoading: false,
     blockLoading: false,
     materialLoading: false,
     gradeControlLoading: false,
     pileLoading: false,
 
     prospectSearch: "",
+    pitDomeSearch: "",
     blockSearch: "",
     materialSearch: "",
     gradeControlSearch: "",
     pileSearch: "",
+
   }
 }
 
@@ -295,6 +304,45 @@ async function fetchProspects(row: RowState, q = "") {
   }
 }
 
+async function fetchPitDomes(row: RowState, q = "") {
+  if (!row.id_prospect_area) {
+    row.pitDomeOptions = []
+    row.id_pit_dome = ""
+    return
+  }
+
+  row.pitDomeLoading = true
+
+  try {
+    const res: any = await request(
+      "/api/master/lookups/mine-pit-dome/",
+      {
+        method: "GET",
+        query: {
+          q,
+          page: 1,
+          page_size: 50,
+          loading_point: row.id_prospect_area,
+          value_key: "id",
+          label_key: "dome",
+        },
+      }
+    )
+
+    row.pitDomeOptions = (res?.results ?? []).map((item: any) =>
+      toLookupOption(item, ["id"], ["dome"])
+    )
+    if (
+      !row.id_pit_dome &&
+      row.pitDomeOptions.length === 1
+    ) {
+      row.id_pit_dome = row.pitDomeOptions[0]!.value
+    }
+  } finally {
+    row.pitDomeLoading = false
+  }
+}
+
 async function fetchMaterials(row: RowState, q = "") {
   row.materialLoading = true
 
@@ -462,6 +510,10 @@ const onProspectSearch = useDebounceFn((row: RowState) => {
   fetchProspects(row, row.prospectSearch)
 }, 300)
 
+const onPitDomeSearch = useDebounceFn(
+  (row: RowState) => { fetchPitDomes(row, row.pitDomeSearch)
+  },300)
+
 const onMaterialSearch = useDebounceFn((row: RowState) => {
   fetchMaterials(row, row.materialSearch)
 }, 300)
@@ -481,6 +533,11 @@ const onOreClassSearch = useDebounceFn((row: RowState, q: string) => {
 const onTruckFactorSearch = useDebounceFn((row: RowState, q: string) => {
   fetchTruckFactors(row, q)
 }, 300)
+
+async function onProspectChange(row: RowState) {
+  row.id_pit_dome = ""
+  await fetchPitDomes(row)
+}
 
 async function onMaterialChange(row: RowState) {
   row.ore_class = ""
@@ -544,6 +601,7 @@ function submit() {
       row.tgl_production &&
       row.shift &&
       row.id_prospect_area &&
+      row.id_pit_dome &&
       row.id_block &&
       row.id_material &&
       row.id_pile &&
@@ -561,6 +619,7 @@ function submit() {
         category: row.category || null,
         shift: row.shift || null,
         id_prospect_area: toNumberOrNull(row.id_prospect_area),
+        id_pit_dome: toNumberOrNull(row.id_pit_dome),
         id_block: toNumberOrNull(row.id_block),
         from_rl: toNumberOrNull(row.from_rl),
         to_rl: toNumberOrNull(row.to_rl),
@@ -608,6 +667,7 @@ function submit() {
               <TableHead>Category</TableHead>
               <TableHead>Shift</TableHead>
               <TableHead>Prospect Area</TableHead>
+              <TableHead>Pit Dome</TableHead>
               <TableHead>Block</TableHead>
               <TableHead>From RL</TableHead>
               <TableHead>To RL</TableHead>
@@ -721,6 +781,44 @@ function submit() {
 
                     <SelectItem
                       v-for="o in row.prospectOptions"
+                      :key="o.value"
+                      :value="o.value"
+                    >
+                      {{ o.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+
+              <TableCell>
+                <Select
+                  v-model="row.id_pit_dome"
+                  :disabled="!row.id_prospect_area"
+                >
+                  <SelectTrigger class="w-44">
+                    <SelectValue
+                      :placeholder="
+                        row.pitDomeLoading
+                          ? 'Loading...'
+                          : 'Pit Dome'
+                      "
+                    />
+                  </SelectTrigger>
+
+                  <SelectContent class="max-h-80 overflow-auto">
+                    <div class="sticky top-0 z-10 bg-background p-2 border-b">
+                      <Input
+                        v-model="row.pitDomeSearch"
+                        placeholder="Search dome..."
+                        class="h-8"
+                        @input="onPitDomeSearch(row)"
+                        @keydown.stop
+                        @click.stop
+                      />
+                    </div>
+
+                    <SelectItem
+                      v-for="o in row.pitDomeOptions"
                       :key="o.value"
                       :value="o.value"
                     >
