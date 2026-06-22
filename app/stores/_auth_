@@ -1,5 +1,4 @@
 import { defineStore } from "pinia"
-import { resetAllStores } from "@/utils/resetStores"
 
 type LoginResponse = {
   access: string
@@ -30,16 +29,6 @@ const apiUrl = (baseURL: string, path: string) => {
   return `${base}${normalizedPath}`
 }
 
-const safeParse = (v: string | null) => {
-  if (!v || v === "undefined" || v === "null") return null
-
-  try {
-    return JSON.parse(v)
-  } catch {
-    return null
-  }
-}
-
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     access: "" as string,
@@ -65,6 +54,15 @@ export const useAuthStore = defineStore("auth", {
 
       if (import.meta.server) return
 
+      const safeParse = (v: string | null) => {
+        if (!v || v === "undefined" || v === "null") return null
+        try {
+          return JSON.parse(v)
+        } catch {
+          return null
+        }
+      }
+
       this.user = safeParse(localStorage.getItem("user"))
       this.iupAccess = safeParse(localStorage.getItem("iupAccess"))
 
@@ -78,22 +76,16 @@ export const useAuthStore = defineStore("auth", {
       const accessCookie = useCookie<string | null>("access", { sameSite: "lax" })
       const refreshCookie = useCookie<string | null>("refresh", { sameSite: "lax" })
 
-      accessCookie.value = this.access || null
-      refreshCookie.value = this.refresh || null
+      accessCookie.value = this.access ? this.access : null
+      refreshCookie.value = this.refresh ? this.refresh : null
 
       if (import.meta.server) return
 
-      if (this.user == null) {
-        localStorage.removeItem("user")
-      } else {
-        localStorage.setItem("user", JSON.stringify(this.user))
-      }
+      if (this.user == null) localStorage.removeItem("user")
+      else localStorage.setItem("user", JSON.stringify(this.user))
 
-      if (this.iupAccess == null) {
-        localStorage.removeItem("iupAccess")
-      } else {
-        localStorage.setItem("iupAccess", JSON.stringify(this.iupAccess))
-      }
+      if (this.iupAccess == null) localStorage.removeItem("iupAccess")
+      else localStorage.setItem("iupAccess", JSON.stringify(this.iupAccess))
     },
 
     clear() {
@@ -114,30 +106,10 @@ export const useAuthStore = defineStore("auth", {
       if (import.meta.client) {
         localStorage.removeItem("user")
         localStorage.removeItem("iupAccess")
-
-        clearNuxtData()
-      }
-    },
-
-    resetSessionDataOnly() {
-      this.user = null
-      this.iupAccess = null
-      this.meLoaded = false
-      this.iupLoaded = false
-      this.mePromise = null
-
-      if (import.meta.client) {
-        localStorage.removeItem("user")
-        localStorage.removeItem("iupAccess")
-
-        resetAllStores()
-        clearNuxtData()
       }
     },
 
     async login(username: string, password: string) {
-      this.clear()
-
       const config = useRuntimeConfig()
       const baseURL = config.public.apiBaseUrl
 
@@ -149,57 +121,44 @@ export const useAuthStore = defineStore("auth", {
 
         this.access = res.access
         this.refresh = res.refresh
-
-        this.user = res.user ?? null
-        this.iupAccess = res.iup_access ?? null
+        this.user = res.user ?? this.user
+        this.iupAccess = res.iup_access ?? this.iupAccess
 
         this.meLoaded = false
-        this.iupLoaded = false
+        this.iupLoaded = !!(this.access && this.iupAccess)
 
         this.saveToStorage()
 
         await this.fetchMe()
       } catch (e: any) {
-        this.clear()
-
         const msg =
           e?.data?.detail ||
-          (Array.isArray(e?.data?.non_field_errors)
-            ? e.data.non_field_errors[0]
-            : null) ||
+          (Array.isArray(e?.data?.non_field_errors) ? e.data.non_field_errors[0] : null) ||
           "Username atau password salah"
-
         throw new Error(msg)
       }
     },
 
-    async fetchMe(force = false) {
+    async fetchMe() {
       const hasPerms = Array.isArray(this.user?.permissions)
 
-      if (!force && this.meLoaded && hasPerms) {
-        return {
-          user: this.user,
-          iup_access: this.iupAccess,
-        }
+      if (this.meLoaded && hasPerms) {
+        return { user: this.user, iup_access: this.iupAccess }
       }
 
-      if (!force && this.mePromise) return this.mePromise
+      if (this.mePromise) return this.mePromise
 
       this.mePromise = (async () => {
         const { request } = useApi()
+        const res = await request<MeResponse>("/api/auth/me/", { method: "GET" })
 
-        const res = await request<MeResponse>("/api/auth/me/", {
-          method: "GET",
-        })
-
-        this.user = res.user ?? null
-        this.iupAccess = res.iup_access ?? null
+        this.user = res.user
+        this.iupAccess = res.iup_access
 
         this.meLoaded = Array.isArray(this.user?.permissions)
         this.iupLoaded = !!this.iupAccess
 
         this.saveToStorage()
-
         return res
       })()
 
@@ -211,36 +170,19 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async refreshToken() {
-      if (!this.refresh) {
-        this.clear()
-        throw new Error("No refresh token")
-      }
+      if (!this.refresh) throw new Error("No refresh token")
 
       const config = useRuntimeConfig()
       const baseURL = config.public.apiBaseUrl
 
-      try {
-        const res = await $fetch<{ access: string }>(
-          apiUrl(baseURL, "/api/auth/refresh/"),
-          {
-            method: "POST",
-            body: { refresh: this.refresh },
-          }
-        )
+      const res = await $fetch<{ access: string }>(apiUrl(baseURL, "/api/auth/refresh/"), {
+        method: "POST",
+        body: { refresh: this.refresh },
+      })
 
-        this.access = res.access
-        this.saveToStorage()
-
-        return this.access
-      } catch (e) {
-        this.clear()
-        throw e
-      }
-    },
-
-    async logout() {
-      this.clear()
-      await navigateTo("/login")
+      this.access = res.access
+      this.saveToStorage()
+      return this.access
     },
   },
 })
