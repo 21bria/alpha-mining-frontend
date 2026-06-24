@@ -1,4 +1,4 @@
 
 import type { FilterSchema } from "@/types/table"
 
-export const mineDomeFilters: FilterSchema[] = [] // cuma keyword
+export const pitDomeFilters: FilterSchema[] = [] // cuma keyword

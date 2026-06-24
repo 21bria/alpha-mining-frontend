@@ -20,8 +20,8 @@ import {
   type SourcePitDomeRow,
 } from "@/modules/master/pit-dome/columns"
 
-import { mineDomeConfig } from "@/modules/master/dome/table"
-import { mineDomeFilters } from "~/modules/master/dome/filters"
+import { pitDomeConfig } from "@/modules/master/pit-dome/table"
+import { pitDomeFilters } from "~/modules/master/pit-dome/filters"
 
 const { request } = useApi()
 const notify = useNotify()
@@ -41,7 +41,7 @@ const pageSize = ref(10)
 const search = ref("")
 const ordering = ref<string | null>(null)
 const serverFilters = ref<Record<string, any>>({
-  ...(mineDomeConfig.defaultQuery ?? {}),
+  ...(pitDomeConfig.defaultQuery ?? {}),
 })
 
 const query = computed(() => ({
@@ -56,7 +56,7 @@ const { data, pending, error, refresh } =
   await useAsyncData<ApiList<SourcePitDomeRow>>(
     () => `Source Pit Dome:${JSON.stringify(query.value)}`,
     () =>
-      request(mineDomeConfig.endpoint, {
+      request(pitDomeConfig.endpoint, {
         method: "GET",
         query: query.value,
       }),
@@ -86,7 +86,7 @@ function onApply({ search: s, filters }: any) {
 
 function onReset() {
   search.value = ""
-  serverFilters.value = { ...(mineDomeConfig.defaultQuery ?? {}) }
+  serverFilters.value = { ...(pitDomeConfig.defaultQuery ?? {}) }
   page.value = 1
   refresh()
 }
@@ -136,14 +136,14 @@ async function submit(payload: SourcePitDomePayload) {
 
   try {
     if (mode.value === "create") {
-      await request(mineDomeConfig.endpoint, {
+      await request(pitDomeConfig.endpoint, {
         method: "POST",
         body: payload,
       })
 
       notify.success(`Dome "${payload.dome}" created`)
     } else {
-      await request(`${mineDomeConfig.endpoint}${payload.id}/`, {
+      await request(`${pitDomeConfig.endpoint}${payload.id}/`, {
         method: "PATCH",
         body: payload,
       })
@@ -177,7 +177,7 @@ async function confirmDelete() {
   if (!selectedDelete.value) return
 
   try {
-    await request(`${mineDomeConfig.endpoint}${selectedDelete.value.id}/`, {
+    await request(`${pitDomeConfig.endpoint}${selectedDelete.value.id}/`, {
       method: "DELETE",
     })
 
@@ -315,7 +315,7 @@ watchEffect(() => {
       :pageSize="pageSize"
       :search="search"
       :loading="pending"
-      :filtersSchema="mineDomeFilters"
+      :filtersSchema="pitDomeFilters"
       :showSyncData="false"
       :showRangeDelete="false"
       :showDownloadTemplate="false"

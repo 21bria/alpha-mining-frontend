@@ -155,12 +155,6 @@ export function getSourceMinesDomeColumns(
       ]
       : []),
 
-    // {
-    //   accessorKey: "status",
-    //   header: ({ column }) => h(DataTableColumnHeader, { column, title: "Status" }),
-    //   enableSorting: true,
-    //   cell: ({ row }) => h("div", { class: "text-muted-foreground" }, fmtStatus(row.original.status)),
-    // },
     {
       accessorKey: "direct_sale",
       header: ({ column }) => h(DataTableColumnHeader, { column, title: "Direct" }),
