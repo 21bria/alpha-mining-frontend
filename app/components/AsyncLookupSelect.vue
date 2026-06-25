@@ -16,6 +16,7 @@ const props = defineProps<{
   selectedLabel?: string | null
   valueKey?: string
   labelKey?: string
+  searchParam?: string
   allowNull?: boolean
   nullLabel?: string
 }>()
@@ -39,15 +40,20 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null
 const isField = computed(() => (props.variant ?? "compact") === "field")
 const valueKey = computed(() => props.valueKey ?? "id")
 const labelKey = computed(() => props.labelKey ?? "name")
+const searchParam = computed(() => props.searchParam ?? "search")
 const allowNull = computed(() => props.allowNull ?? true)
-const nullLabel = computed(() => props.nullLabel ?? (isField.value ? `Select ${props.label}` : "All"))
+const nullLabel = computed(() =>
+  props.nullLabel ?? (isField.value ? `Select ${props.label}` : "All")
+)
 
 const dependsQuery = computed(() => {
   const d = props.depends || {}
   const q: Record<string, any> = {}
+
   for (const k of Object.keys(d)) {
     q[k] = (d[k]?.value ?? d[k]) ?? undefined
   }
+
   return q
 })
 
@@ -60,18 +66,24 @@ function remember(it: LookupItem) {
 }
 
 function mapItem(raw: any): LookupItem {
-  // const value = Number(raw?.value ?? raw?.[valueKey.value] ?? raw?.id)
   const value = raw?.value ?? raw?.[valueKey.value] ?? raw?.id
+
   const label = String(
     raw?.label ??
-    raw?.[labelKey.value] ??
-    raw?.name ??
-    raw?.title ??
-    raw?.code ??
-    value
+      raw?.[labelKey.value] ??
+      raw?.name ??
+      raw?.title ??
+      raw?.code ??
+      value
   )
 
   return { value, label }
+}
+
+function resetList() {
+  items.value = []
+  page.value = 1
+  hasNext.value = true
 }
 
 watch(
@@ -95,10 +107,11 @@ watch(
 )
 
 watch(dependsQuery, () => {
-  items.value = []
-  page.value = 1
-  hasNext.value = true
-  if (open.value) load(true)
+  resetList()
+
+  if (open.value) {
+    load(true)
+  }
 })
 
 async function fetchLabelById(id: number) {
@@ -150,13 +163,14 @@ async function load(reset = false) {
   if (!hasNext.value && !reset) return
 
   loading.value = true
+
   try {
     const res = await request<ApiList<any>>(props.endpoint, {
       method: "GET",
       query: {
         page: page.value,
         page_size: 10,
-        search: searchQuery.value || undefined,
+        [searchParam.value]: searchQuery.value || undefined,
         value_key: valueKey.value,
         label_key: labelKey.value,
         ...dependsQuery.value,
@@ -167,9 +181,10 @@ async function load(reset = false) {
 
     const newItems = (res?.results ?? [])
       .map(mapItem)
-      .filter((it) => Number.isFinite(it.value))
+      .filter((it) => it.value !== null && it.value !== undefined)
 
     newItems.forEach(remember)
+
     items.value = reset ? newItems : [...items.value, ...newItems]
   } finally {
     loading.value = false
@@ -178,14 +193,32 @@ async function load(reset = false) {
 
 function toggleOpen() {
   if (props.disabled) return
+
   open.value = !open.value
+
   if (open.value && items.value.length === 0) {
     load(true)
   }
 }
 
+function closeDropdown() {
+  open.value = false
+}
+
+function selectItem(it: LookupItem) {
+  remember(it)
+  model.value = it.value
+  closeDropdown()
+}
+
+function clearValue() {
+  model.value = null
+  closeDropdown()
+}
+
 function onScroll(e: Event) {
   const el = e.target as HTMLElement
+
   if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
     if (hasNext.value && !loading.value) {
       page.value += 1
@@ -257,20 +290,25 @@ const selectedLabel = computed(() => {
     <div
       v-if="open"
       :class="[
-        'absolute z-50 mt-2 rounded-md border bg-background shadow',
-        isField ? 'w-full' : 'w-[260px]'
+        'absolute z-50 mt-2 rounded-md border bg-background shadow-lg',
+        isField ? 'w-full' : 'w-[260px]',
       ]"
     >
-      <div class="p-2 border-b">
-        <Input placeholder="Search..." v-model="searchInput" class="h-9" />
+      <div class="border-b p-2">
+        <Input
+          v-model="searchInput"
+          placeholder="Search..."
+          class="h-9"
+          @keydown.stop
+        />
       </div>
 
-      <div class="max-h-[240px] overflow-auto" @scroll="onScroll">
+      <div class="max-h-[180px] overflow-y-auto" @scroll="onScroll">
         <button
-          v-if="allowNull"
-          class="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+          v-if="allowNull && !searchInput.trim()"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-muted"
           type="button"
-          @click="model = null; open = false"
+          @click="clearValue"
         >
           {{ nullLabel }}
         </button>
@@ -278,9 +316,9 @@ const selectedLabel = computed(() => {
         <button
           v-for="it in items"
           :key="it.value"
-          class="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-muted"
           type="button"
-          @click="remember(it); model = it.value; open = false"
+          @click="selectItem(it)"
         >
           {{ it.label }}
         </button>
@@ -296,7 +334,10 @@ const selectedLabel = computed(() => {
           Loading...
         </div>
 
-        <div v-else-if="!items.length" class="px-3 py-2 text-xs text-muted-foreground">
+        <div
+          v-else-if="!items.length && searchInput.trim().length >= MIN_SEARCH"
+          class="px-3 py-2 text-xs text-muted-foreground"
+        >
           No results
         </div>
       </div>
