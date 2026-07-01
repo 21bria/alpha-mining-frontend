@@ -35,7 +35,7 @@
 import { ref, computed } from "vue"
 import { Button } from "@/components/ui/button"
 import DatePicker from "@/components/filters/DatePicker.vue"
-import SelectLookup from "@/components/AsyncLookupSelect.vue"
+import SelectLookup from "@/components/form/LookupSelect.vue"
 
 function getDayDiff(start: string, end: string) {
   const s = new Date(start)

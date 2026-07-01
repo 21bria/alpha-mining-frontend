@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import SelectLookup from '@/components/AsyncLookupSelect.vue'
+import SelectLookup from '@/components/form/LookupSelect.vue'
 import { Button } from '@/components/ui/button'
 
 const vendor = ref<number | null>(null)

@@ -4,41 +4,35 @@ definePageMeta({
   public: true
 
 })
+
+const year = new Date().getFullYear()
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center gap-6 bg-muted p-6 min-h-svh md:p-10">
-    <div class="max-w-sm w-full flex flex-col gap-2">
-      <NuxtLink to="#" class="flex items-center self-center gap-1 font-medium">
-        <div class="h-20 w-24 flex items-center justify-center">
-          <img src="/meinova.png" class="size-24 object-contain">
+  <LayoutAuth reverse>
+    <div class="mx-auto grid max-w-sm gap-6">
+      <!-- Mobile logo only -->
+      <NuxtLink to="/" class="flex items-center justify-center lg:hidden">
+        <div class="flex h-18 w-18 items-center justify-center">
+          <img src="/meinova.png" alt="Meinova" class="size-18 object-contain">
         </div>
-
-        <!-- <span>
-          Alpha Apps.
-        </span> -->
-
       </NuxtLink>
-      <div class="flex flex-col gap-4">
-        <Card>
-          <CardHeader class="text-center">
-            <CardTitle class="text-xl">
-              Welcome back
-            </CardTitle>
-            <CardDescription>
-              Login with your Apple or Google account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AuthSignIn />
-          </CardContent>
-        </Card>
-        <div
-          class="text-center text-balance text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-          By clicking continue, you agree to our <a href="#">Terms of Service</a>
-          and <a href="#">Privacy Policy</a>.
-        </div>
+
+      <div class="grid gap-2 text-center">
+        <h1 class="text-2xl font-semibold tracking-tight">
+          Welcome back
+        </h1>
+
+        <p class="text-balance text-sm text-muted-foreground">
+          Sign in to access your Apps workspace.
+        </p>
       </div>
+
+      <AuthSignIn />
+
+      <p class="text-center text-xs text-muted-foreground lg:hidden">
+        © {{ year }} Meinova Inc. All rights reserved.
+      </p>
     </div>
-  </div>
+  </LayoutAuth>
 </template>

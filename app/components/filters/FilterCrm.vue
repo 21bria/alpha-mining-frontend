@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import DatePicker from "@/components/filters/DatePicker.vue"
-import SelectLookup from "@/components/AsyncLookupSelect.vue"
+import SelectLookup from "@/components/form/LookupSelect.vue"
 import SelectLookupText from "@/components/AsyncLookupSelectText.vue"
 import { Button } from "@/components/ui/button"
 import { useCrmFilterStore } from "@/stores/filters/crm-filter"

@@ -4,7 +4,7 @@ import { today, getLocalTimeZone, CalendarDate } from "@internationalized/date"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Separator } from "@/components/ui/separator"
-import SelectLookup from "@/components/AsyncLookupSelect.vue"
+import SelectLookup from "@/components/form/LookupSelect.vue"
 import {
   Select,
   SelectTrigger,

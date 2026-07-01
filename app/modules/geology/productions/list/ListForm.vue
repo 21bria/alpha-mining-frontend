@@ -63,6 +63,7 @@ type ProductionPayload = {
   sale_adjust: number | null
   remarks: string | null
   category: string | null
+  sample_type: string | null
   direct: string | null
   no_production: string | null
 }

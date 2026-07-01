@@ -2,7 +2,7 @@
 import { ref, computed } from "vue"
 import { today, getLocalTimeZone, CalendarDate } from "@internationalized/date"
 import { Button } from "@/components/ui/button"
-import SelectLookup from "@/components/AsyncLookupSelect.vue"
+import SelectLookup from "@/components/form/LookupSelect.vue"
 import { Separator } from "@/components/ui/separator"
 import {
   Select,

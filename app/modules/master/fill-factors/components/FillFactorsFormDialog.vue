@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 
-import SelectLookup from "@/components/AsyncLookupSelect.vue"
+import SelectLookup from "@/components/form/LookupSelect.vue"
 type UserRole = "SYSTEM" | "MANAGEMENT" | "GLOBAL_VIEWER" | "SITE_USER"
 
 export type FillFactorsPayload = {

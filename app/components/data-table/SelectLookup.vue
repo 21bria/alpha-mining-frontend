@@ -3,7 +3,6 @@ import { ref, watch, computed } from "vue"
 import { useApi } from "@/composables/useApi"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { getEndpointCache } from "@/components/data-table/SelectLookupCache"
 type LookupItem = { value: number; label: string }
 type ApiList<T> = { count: number; next: string | null; results: T[] }
 

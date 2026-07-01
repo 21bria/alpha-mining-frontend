@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import LookupSelect from "@/components/AsyncLookupSelect.vue"
+import LookupSelect from "@/components/form/LookupSelect.vue"
 
 type UserRole = "SYSTEM" | "MANAGEMENT" | "GLOBAL_VIEWER" | "SITE_USER"
 

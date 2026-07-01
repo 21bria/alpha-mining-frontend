@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import SelectLookup from '@/components/AsyncLookupSelect.vue'
+import SelectLookup from '@/components/form/LookupSelect.vue'
 
 type LookupVariant = 'field' | 'compact'
 

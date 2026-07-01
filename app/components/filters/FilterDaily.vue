@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import DatePicker from '@/components/filters/DatePicker.vue'
-import SelectLookup from '@/components/AsyncLookupSelect.vue'
+import SelectLookup from '@/components/form/LookupSelect.vue'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{

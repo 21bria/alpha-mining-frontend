@@ -87,7 +87,8 @@ import {
 import { Button } from '@/components/ui/button'
 import YearPicker from '@/components/filters/YearPicker.vue'
 import MonthPicker from '@/components/filters/MonthPicker.vue'
-import SelectLookup from '@/components/AsyncLookupSelect.vue'
+import SelectLookup from '@/components/form/LookupSelect.vue'
+
 
 type FilterOption = {
   value: string

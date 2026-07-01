@@ -11,7 +11,7 @@ import { parseDate } from "@internationalized/date"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import SelectLookup from "@/components/AsyncLookupSelect.vue"
+import SelectLookup from "@/components/form/LookupSelect.vue"
 import { useApi } from "@/composables/useApi"
 import { Calendar } from "@/components/ui/calendar"
 

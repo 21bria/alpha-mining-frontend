@@ -60,7 +60,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import DatePicker from "@/components/filters/DatePicker.vue"
-import SelectLookup from "@/components/AsyncLookupSelect.vue"
+import SelectLookup from "@/components/form/LookupSelect.vue"
 
 const props = defineProps<{
   role?: string

@@ -38,7 +38,8 @@ useHead({
 })
 
 const title = 'App Mining - Nickel'
-const description = 'This dashboard, built with Nuxt, Shadcn Vue, and TailwindCSS. It includes a dark mode toggle and is optimized for performance and data efficiency.'
+const description = 'Empower mining operations with integrated production, maintenance, quality,\
+                    fuel management, inventory, barging, workforce, analytics, and AI assistance.'
 
 useSeoMeta({
   title,

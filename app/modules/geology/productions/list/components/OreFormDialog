@@ -44,7 +44,6 @@ export type ProductionPayload = {
   dome_compositing: string | null
   stock_compositing: string | null
   status_dome: string | null
-  sample_type: string | null
   sale_adjust: number | null
   remarks: string | null
   category: string | null
@@ -81,7 +80,6 @@ type FormState = {
   dome_compositing: string
   stock_compositing: string
   status_dome: string
-  sample_type: string
   sale_adjust: string
   remarks: string
   category: string
@@ -138,7 +136,6 @@ function normalizeDateInput(value: any): string {
     const dd = String(dt.getDate()).padStart(2, "0")
     return `${yyyy}-${mm}-${dd}`
   }
-
   return ""
 }
 
@@ -168,9 +165,7 @@ function assignPagedOptions(target: { value: LookupOption[] }, items: LookupOpti
   })
 }
 
-function computeHasMore(currentLength: number, count: number, next?: string | null) {
-  if (next !== undefined) return Boolean(next)
-  if (!count) return false
+function computeHasMore(currentLength: number, count: number) {
   return currentLength < count
 }
 
@@ -237,7 +232,6 @@ const local = ref<FormState>({
   dome_compositing: "",
   stock_compositing: "",
   status_dome: "",
-  sample_type: "",
   sale_adjust: "",
   remarks: "",
   category: "",
@@ -257,6 +251,7 @@ const batchStatusOptions: LookupOption[] = [
   { value: "InComplete", label: "InComplete" },
 ]
 
+
 const domeStatusOptions: LookupOption[] = [
   { value: "Continue", label: "Continue" },
   { value: "Close", label: "Close" },
@@ -268,11 +263,11 @@ const mineIUPLoading = ref(false)
 const mineIUPSearch = ref("")
 const mineIUPPage = ref(1)
 const mineIUPHasMore = ref(true)
+const mineIUPContentRef = ref<HTMLElement | null>(null)
 
 async function fetchMineIUP(q = "", page = 1) {
   if (mineIUPLoading.value) return
   mineIUPLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/mine-iup/", {
       method: "GET",
@@ -280,16 +275,13 @@ async function fetchMineIUP(q = "", page = 1) {
     })
 
     const items = (res?.results ?? []) as MineIupOption[]
+    const count = Number(res?.count ?? 0)
 
     if (page === 1) mineIUPOptions.value = items
     else mineIUPOptions.value = [...mineIUPOptions.value, ...items]
 
     mineIUPPage.value = page
-    mineIUPHasMore.value = computeHasMore(
-      mineIUPOptions.value.length,
-      Number(res?.count ?? 0),
-      res?.next
-    )
+    mineIUPHasMore.value = mineIUPOptions.value.length < count
   } finally {
     mineIUPLoading.value = false
   }
@@ -298,7 +290,9 @@ async function fetchMineIUP(q = "", page = 1) {
 const onMineIUPSearch = useDebounceFn((q: string) => {
   mineIUPPage.value = 1
   mineIUPHasMore.value = true
-  fetchMineIUP(q, 1)
+  fetchMineIUP(q, 1).then(() => {
+    if (mineIUPContentRef.value) mineIUPContentRef.value.scrollTop = 0
+  })
 }, 300)
 
 function onMineIUPScroll(e: Event) {
@@ -319,7 +313,6 @@ const blockHasMore = ref(true)
 async function fetchBlocks(q = "", page = 1) {
   if (blockLoading.value) return
   blockLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/mine-block/", {
       method: "GET",
@@ -339,7 +332,7 @@ async function fetchBlocks(q = "", page = 1) {
 
     assignPagedOptions(blockOptions, items, page)
     blockPage.value = page
-    blockHasMore.value = computeHasMore(blockOptions.value.length, Number(res?.count ?? 0), res?.next)
+    blockHasMore.value = computeHasMore(blockOptions.value.length, Number(res?.count ?? 0))
   } finally {
     blockLoading.value = false
   }
@@ -369,7 +362,6 @@ const prospectHasMore = ref(true)
 async function fetchProspects(q = "", page = 1) {
   if (prospectLoading.value) return
   prospectLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/mine-loading/", {
       method: "GET",
@@ -384,12 +376,12 @@ async function fetchProspects(q = "", page = 1) {
     })
 
     const items = (res?.results ?? []).map((item: any) =>
-      toLookupOption(item, ["id"], ["loading_point", "prospect_area", "name"])
+      toLookupOption(item, ["id"], ["prospect_area", "name"])
     )
 
     assignPagedOptions(prospectOptions, items, page)
     prospectPage.value = page
-    prospectHasMore.value = computeHasMore(prospectOptions.value.length, Number(res?.count ?? 0), res?.next)
+    prospectHasMore.value = computeHasMore(prospectOptions.value.length, Number(res?.count ?? 0))
   } finally {
     prospectLoading.value = false
   }
@@ -445,7 +437,10 @@ async function fetchPitDomes(q = "", page = 1) {
 
     assignPagedOptions(pitDomeOptions, items, page)
     pitDomePage.value = page
-    pitDomeHasMore.value = computeHasMore(pitDomeOptions.value.length, Number(res?.count ?? 0), res?.next)
+    pitDomeHasMore.value = computeHasMore(
+      pitDomeOptions.value.length,
+      Number(res?.count ?? 0)
+    )
 
     const first = pitDomeOptions.value[0]
     if (!local.value.id_pit_dome && first) {
@@ -465,6 +460,7 @@ const onPitDomeSearch = useDebounceFn((q: string) => {
 function onPitDomeScroll(e: Event) {
   const el = e.target as HTMLElement
   const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40
+
   if (nearBottom && pitDomeHasMore.value && !pitDomeLoading.value) {
     fetchPitDomes(pitDomeSearch.value, pitDomePage.value + 1)
   }
@@ -480,7 +476,6 @@ const materialHasMore = ref(true)
 async function fetchMaterials(q = "", page = 1) {
   if (materialLoading.value) return
   materialLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/material/", {
       method: "GET",
@@ -501,7 +496,7 @@ async function fetchMaterials(q = "", page = 1) {
 
     assignPagedOptions(materialOptions, items, page)
     materialPage.value = page
-    materialHasMore.value = computeHasMore(materialOptions.value.length, Number(res?.count ?? 0), res?.next)
+    materialHasMore.value = computeHasMore(materialOptions.value.length, Number(res?.count ?? 0))
   } finally {
     materialLoading.value = false
   }
@@ -533,7 +528,6 @@ async function fetchOreClasses(q = "", page = 1) {
   if (oreClassLoading.value) return
 
   oreClassLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/ore-class/", {
       method: "GET",
@@ -554,7 +548,7 @@ async function fetchOreClasses(q = "", page = 1) {
 
     assignPagedOptions(oreClassOptions, items, page)
     oreClassPage.value = page
-    oreClassHasMore.value = computeHasMore(oreClassOptions.value.length, Number(res?.count ?? 0), res?.next)
+    oreClassHasMore.value = computeHasMore(oreClassOptions.value.length, Number(res?.count ?? 0))
   } finally {
     oreClassLoading.value = false
   }
@@ -573,7 +567,6 @@ function onOreClassScroll(e: Event) {
     fetchOreClasses(oreClassSearch.value, oreClassPage.value + 1)
   }
 }
-
 /* TRUCK FACTOR */
 const truckFactorOptions = ref<LookupOption[]>([])
 const truckFactorLoading = ref(false)
@@ -586,7 +579,6 @@ async function fetchTruckFactors(q = "", page = 1) {
   if (truckFactorLoading.value) return
 
   truckFactorLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/ore-truck-factors/", {
       method: "GET",
@@ -607,7 +599,10 @@ async function fetchTruckFactors(q = "", page = 1) {
 
     assignPagedOptions(truckFactorOptions, items, page)
     truckFactorPage.value = page
-    truckFactorHasMore.value = computeHasMore(truckFactorOptions.value.length, Number(res?.count ?? 0), res?.next)
+    truckFactorHasMore.value = computeHasMore(
+      truckFactorOptions.value.length,
+      Number(res?.count ?? 0)
+    )
   } finally {
     truckFactorLoading.value = false
   }
@@ -629,8 +624,11 @@ function onTruckFactorScroll(e: Event) {
 
 function extractUnitTruck(label?: string): string {
   const raw: string = String(label ?? "").trim()
+
   if (!raw) return ""
-  return raw.split("-")[0]?.trim() ?? ""
+
+  const parts = raw.split("-")
+  return parts[0]?.trim() ?? ""
 }
 
 function syncUnitTruckFromTruckFactor() {
@@ -650,15 +648,25 @@ function recalculateTonnage() {
     return
   }
 
-  local.value.tonnage = ritase ? (ritase * ton).toFixed(2) : ton.toFixed(2)
+  if (!ritase) {
+    local.value.tonnage = ton.toFixed(2)
+    return
+  }
+
+  local.value.tonnage = (ritase * ton).toFixed(2)
 }
 
 function syncInitialTonnage() {
   const initialTonnage = String(local.value.tonnage ?? "").trim()
-  if (initialTonnage !== "") return
+
+  // kalau backend sudah kirim tonnage, tampilkan itu dulu
+  if (initialTonnage !== "") {
+    return
+  }
+
+  // kalau tonnage kosong, baru hitung otomatis
   recalculateTonnage()
 }
-
 /* CATEGORY */
 const categoryOptions = ref<LookupOption[]>([])
 const categoryLoading = ref(false)
@@ -669,7 +677,6 @@ const categoryHasMore = ref(true)
 async function fetchCategories(q = "", page = 1) {
   if (categoryLoading.value) return
   categoryLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/mine-categories/", {
       method: "GET",
@@ -684,12 +691,12 @@ async function fetchCategories(q = "", page = 1) {
     })
 
     const items = (res?.results ?? []).map((item: any) =>
-      toLookupOption(item, ["id", "category"], ["category", "name"])
+      toLookupOption(item, ["id"], ["category", "name"])
     )
 
     assignPagedOptions(categoryOptions, items, page)
     categoryPage.value = page
-    categoryHasMore.value = computeHasMore(categoryOptions.value.length, Number(res?.count ?? 0), res?.next)
+    categoryHasMore.value = computeHasMore(categoryOptions.value.length, Number(res?.count ?? 0))
   } finally {
     categoryLoading.value = false
   }
@@ -721,7 +728,6 @@ async function fetchPiles(q = "", page = 1) {
   if (pileLoading.value) return
 
   pileLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/mine-dome/", {
       method: "GET",
@@ -741,7 +747,10 @@ async function fetchPiles(q = "", page = 1) {
 
     assignPagedOptions(pileOptions, items, page)
     pilePage.value = page
-    pileHasMore.value = computeHasMore(pileOptions.value.length, Number(res?.count ?? 0), res?.next)
+    pileHasMore.value = computeHasMore(
+      pileOptions.value.length,
+      Number(res?.count ?? 0)
+    )
   } finally {
     pileLoading.value = false
   }
@@ -771,7 +780,6 @@ const gradeControlHasMore = ref(true)
 async function fetchGradeControls(q = "", page = 1) {
   if (gradeControlLoading.value) return
   gradeControlLoading.value = true
-
   try {
     const res: any = await request("/api/master/lookups/grade-control/", {
       method: "GET",
@@ -791,7 +799,10 @@ async function fetchGradeControls(q = "", page = 1) {
 
     assignPagedOptions(gradeControlOptions, items, page)
     gradeControlPage.value = page
-    gradeControlHasMore.value = computeHasMore(gradeControlOptions.value.length, Number(res?.count ?? 0), res?.next)
+    gradeControlHasMore.value = computeHasMore(
+      gradeControlOptions.value.length,
+      Number(res?.count ?? 0)
+    )
   } finally {
     gradeControlLoading.value = false
   }
@@ -811,56 +822,6 @@ function onGradeControlScroll(e: Event) {
   }
 }
 
-/* SAMPLE TYPE */
-const sampleTypeOptions = ref<LookupOption[]>([])
-const sampleTypeLoading = ref(false)
-const sampleTypeSearch = ref("")
-const sampleTypePage = ref(1)
-const sampleTypeHasMore = ref(true)
-
-async function fetchSampleTypes(q = "", page = 1) {
-  if (sampleTypeLoading.value) return
-  sampleTypeLoading.value = true
-
-  try {
-    const res: any = await request("/api/master/lookups/sample-type/", {
-      method: "GET",
-      query: {
-        q,
-        page,
-        page_size: 10,
-        usage: "production",
-        value_key: "id",
-        label_key: "type_sample",
-      },
-    })
-
-    const items = (res?.results ?? []).map((item: any) =>
-      toLookupOption(item, ["id"], ["type_sample", "name"])
-    )
-
-    assignPagedOptions(sampleTypeOptions, items, page)
-    sampleTypePage.value = page
-    sampleTypeHasMore.value = computeHasMore(sampleTypeOptions.value.length, Number(res?.count ?? 0), res?.next)
-  } finally {
-    sampleTypeLoading.value = false
-  }
-}
-
-const onSampleTypeSearch = useDebounceFn((q: string) => {
-  sampleTypePage.value = 1
-  sampleTypeHasMore.value = true
-  fetchSampleTypes(q, 1)
-}, 300)
-
-function onSampleTypeScroll(e: Event) {
-  const el = e.target as HTMLElement
-  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40
-  if (nearBottom && sampleTypeHasMore.value && !sampleTypeLoading.value) {
-    fetchSampleTypes(sampleTypeSearch.value, sampleTypePage.value + 1)
-  }
-}
-
 /* WATCH CASCADE */
 watch(
   () => local.value.iup,
@@ -870,7 +831,6 @@ watch(
 
     local.value.id_block = ""
     local.value.id_prospect_area = ""
-    local.value.id_pit_dome = ""
     local.value.id_pile = ""
     local.value.category = ""
     local.value.truck_factor = ""
@@ -878,7 +838,7 @@ watch(
 
     resetPagedLookup(blockOptions, blockPage, blockHasMore, blockSearch)
     resetPagedLookup(prospectOptions, prospectPage, prospectHasMore, prospectSearch)
-    resetPagedLookup(pitDomeOptions, pitDomePage, pitDomeHasMore, pitDomeSearch)
+    resetPagedLookup(pitDomeOptions,pitDomePage,pitDomeHasMore,pitDomeSearch)
     resetPagedLookup(pileOptions, pilePage, pileHasMore, pileSearch)
     resetPagedLookup(categoryOptions, categoryPage, categoryHasMore, categorySearch)
     resetPagedLookup(truckFactorOptions, truckFactorPage, truckFactorHasMore, truckFactorSearch)
@@ -929,6 +889,7 @@ watch(
 
     resetPagedLookup(oreClassOptions, oreClassPage, oreClassHasMore, oreClassSearch)
     resetPagedLookup(truckFactorOptions, truckFactorPage, truckFactorHasMore, truckFactorSearch)
+    resetPagedLookup(pitDomeOptions,pitDomePage,pitDomeHasMore,pitDomeSearch)
 
     if (val) {
       await Promise.all([
@@ -947,14 +908,18 @@ watch(
 
     local.value.id_pit_dome = ""
 
-    resetPagedLookup(pitDomeOptions, pitDomePage, pitDomeHasMore, pitDomeSearch)
+    resetPagedLookup(
+      pitDomeOptions,
+      pitDomePage,
+      pitDomeHasMore,
+      pitDomeSearch
+    )
 
     if (val) {
       await fetchPitDomes("", 1)
     }
   }
 )
-
 /* SUBMIT */
 function submit() {
   const payload: ProductionPayload = {
@@ -986,7 +951,6 @@ function submit() {
     dome_compositing: local.value.dome_compositing.trim() || null,
     stock_compositing: local.value.stock_compositing.trim() || null,
     status_dome: local.value.status_dome || null,
-    sample_type: local.value.sample_type || null,
     sale_adjust: toNumberOrNull(local.value.sale_adjust),
     remarks: local.value.remarks.trim() || null,
     category: local.value.category || null,
@@ -1004,7 +968,6 @@ watch(
     if (!v) return
 
     isInitializing.value = true
-
     try {
       local.value = {
         id: props.initial?.id,
@@ -1035,7 +998,6 @@ watch(
         dome_compositing: getInitialString("dome_compositing"),
         stock_compositing: getInitialString("stock_compositing"),
         status_dome: getInitialString("status_dome"),
-        sample_type: getInitialString("sample_type"),
         sale_adjust: getInitialString("sale_adjust"),
         remarks: getInitialString("remarks"),
         category: getInitialString("category"),
@@ -1052,7 +1014,6 @@ watch(
       resetPagedLookup(categoryOptions, categoryPage, categoryHasMore, categorySearch)
       resetPagedLookup(truckFactorOptions, truckFactorPage, truckFactorHasMore, truckFactorSearch)
       resetPagedLookup(gradeControlOptions, gradeControlPage, gradeControlHasMore, gradeControlSearch)
-      resetPagedLookup(sampleTypeOptions, sampleTypePage, sampleTypeHasMore, sampleTypeSearch)
 
       await Promise.all([
         fetchBlocks("", 1),
@@ -1061,12 +1022,20 @@ watch(
         fetchPiles("", 1),
         fetchCategories("", 1),
         fetchGradeControls("", 1),
-        fetchSampleTypes("", 1),
       ])
 
       if (local.value.id_prospect_area) {
         await fetchPitDomes("", 1)
-        ensureOptionExists(pitDomeOptions, local.value.id_pit_dome, getInitialLabel("pit_dome_label", "id_pit_dome_label", "dome"))
+
+        ensureOptionExists(
+          pitDomeOptions,
+          local.value.id_pit_dome,
+          getInitialLabel(
+            "pit_dome_label",
+            "id_pit_dome_label",
+            "dome"
+          )
+        )
       }
 
       ensureOptionExists(blockOptions, local.value.id_block, getInitialLabel("block_label"))
@@ -1074,7 +1043,6 @@ watch(
       ensureOptionExists(materialOptions, local.value.id_material, getInitialLabel("material_label"))
       ensureOptionExists(pileOptions, local.value.id_pile, getInitialLabel("pile_label", "id_pile_label", "pile_id"))
       ensureOptionExists(gradeControlOptions, local.value.grade_control, getInitialLabel("grade_control_label", "grade_control", "code"))
-      ensureOptionExists(sampleTypeOptions, local.value.sample_type, getInitialLabel("sample_type_label", "type_sample_label", "type_sample"))
 
       if (local.value.id_material) {
         await Promise.all([
@@ -1082,8 +1050,17 @@ watch(
           fetchTruckFactors("", 1),
         ])
 
-        ensureOptionExists(oreClassOptions, local.value.ore_class, local.value.ore_class)
-        ensureOptionExists(truckFactorOptions, local.value.truck_factor, local.value.truck_factor)
+        ensureOptionExists(
+          oreClassOptions,
+          local.value.ore_class,
+          local.value.ore_class
+        )
+
+        ensureOptionExists(
+          truckFactorOptions,
+          local.value.truck_factor,
+          local.value.truck_factor
+        )
       }
 
       if (canChooseIup.value) {
@@ -1093,7 +1070,6 @@ watch(
         mineIUPHasMore.value = true
         await fetchMineIUP("", 1)
       }
-
       syncUnitTruckFromTruckFactor()
       syncInitialTonnage()
     } finally {
@@ -1115,64 +1091,40 @@ watch(
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-6">
           <div v-if="canChooseIup" class="grid gap-2">
             <label class="text-sm font-medium">IUP</label>
-            <Select
-              :model-value="local.iup != null ? String(local.iup) : ''"
-              :disabled="mineIUPLoading || !canMutate"
-              @update:model-value="(v) => (local.iup = v ? Number(v) : null)"
-            >
+            <Select :model-value="local.iup != null ? String(local.iup) : ''"
+              @update:model-value="(v) => (local.iup = v ? Number(v) : null)" :disabled="mineIUPLoading || !canMutate">
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="mineIUPLoading ? 'Loading...' : 'Select IUP'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent ref="mineIUPContentRef" class="max-h-80 overflow-auto" @scroll="onMineIUPScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="mineIUPSearch"
-                      placeholder="Search IUP..."
-                      class="h-8"
-                      @input="onMineIUPSearch(mineIUPSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="mineIUPSearch" placeholder="Search IUP..." class="h-8"
+                      @input="onMineIUPSearch(mineIUPSearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onMineIUPScroll">
-                    <SelectItem v-for="o in mineIUPOptions" :key="String(o.value)" :value="String(o.value)">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in mineIUPOptions" :key="String(o.value)" :value="String(o.value)">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
             <p v-if="fieldError('iup')" class="text-sm text-destructive">{{ fieldError("iup") }}</p>
           </div>
-
           <div class="grid gap-2">
             <label class="text-sm font-medium">Category</label>
             <Select v-model="local.category" :disabled="categoryLoading || !canMutate">
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="categoryLoading ? 'Loading...' : 'Select Category'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onCategoryScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="categorySearch"
-                      placeholder="Search Category..."
-                      class="h-8"
-                      @input="onCategorySearch(categorySearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="categorySearch" placeholder="Search Category..." class="h-8"
+                      @input="onCategorySearch(categorySearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onCategoryScroll">
-                    <SelectItem v-for="o in categoryOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in categoryOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -1210,25 +1162,15 @@ watch(
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="blockLoading ? 'Loading...' : 'Select Block'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onBlockScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="blockSearch"
-                      placeholder="Search Block..."
-                      class="h-8"
-                      @input="onBlockSearch(blockSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="blockSearch" placeholder="Search Block..." class="h-8"
+                      @input="onBlockSearch(blockSearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onBlockScroll">
-                    <SelectItem v-for="o in blockOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in blockOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -1241,25 +1183,15 @@ watch(
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="prospectLoading ? 'Loading...' : 'Select Prospect Area'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onProspectScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="prospectSearch"
-                      placeholder="Search Prospect Area..."
-                      class="h-8"
-                      @input="onProspectSearch(prospectSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="prospectSearch" placeholder="Search Prospect Area..." class="h-8"
+                      @input="onProspectSearch(prospectSearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onProspectScroll">
-                    <SelectItem v-for="o in prospectOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in prospectOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -1270,6 +1202,7 @@ watch(
 
           <div class="grid gap-2">
             <label class="text-sm font-medium">Pit Dome</label>
+
             <Select
               v-model="local.id_pit_dome"
               :disabled="pitDomeLoading || !canMutate || !local.id_prospect_area"
@@ -1278,7 +1211,7 @@ watch(
                 <SelectValue :placeholder="pitDomeLoading ? 'Loading...' : 'Select Pit Dome'" />
               </SelectTrigger>
 
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onPitDomeScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
                     <Input
@@ -1291,14 +1224,13 @@ watch(
                     />
                   </div>
 
-                  <div class="max-h-72 overflow-y-auto" @scroll="onPitDomeScroll">
-                    <SelectItem v-for="o in pitDomeOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in pitDomeOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+
             <p v-if="fieldError('id_pit_dome')" class="text-sm text-destructive">
               {{ fieldError("id_pit_dome") }}
             </p>
@@ -1307,11 +1239,13 @@ watch(
           <div class="grid gap-2">
             <label class="text-sm font-medium">From RL</label>
             <Input v-model="local.from_rl" type="number" step="any" placeholder="0" :disabled="!canMutate" />
+            <p v-if="fieldError('from_rl')" class="text-sm text-destructive">{{ fieldError("from_rl") }}</p>
           </div>
 
           <div class="grid gap-2">
             <label class="text-sm font-medium">To RL</label>
             <Input v-model="local.to_rl" type="number" step="any" placeholder="0" :disabled="!canMutate" />
+            <p v-if="fieldError('to_rl')" class="text-sm text-destructive">{{ fieldError("to_rl") }}</p>
           </div>
 
           <div class="grid gap-2">
@@ -1320,28 +1254,19 @@ watch(
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="materialLoading ? 'Loading...' : 'Select Material'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onMaterialScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="materialSearch"
-                      placeholder="Search Material..."
-                      class="h-8"
-                      @input="onMaterialSearch(materialSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="materialSearch" placeholder="Search Material..." class="h-8"
+                      @input="onMaterialSearch(materialSearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onMaterialScroll">
-                    <SelectItem v-for="o in materialOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in materialOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p v-if="fieldError('id_material')" class="text-sm text-destructive">{{ fieldError("id_material") }}</p>
           </div>
 
           <div class="grid gap-2">
@@ -1350,105 +1275,84 @@ watch(
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="oreClassLoading ? 'Loading...' : 'Select Ore Class'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onOreClassScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="oreClassSearch"
-                      placeholder="Search Ore Class..."
-                      class="h-8"
-                      @input="onOreClassSearch(oreClassSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="oreClassSearch" placeholder="Search Ore Class..." class="h-8"
+                      @input="onOreClassSearch(oreClassSearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onOreClassScroll">
-                    <SelectItem v-for="o in oreClassOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in oreClassOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p v-if="fieldError('ore_class')" class="text-sm text-destructive">{{ fieldError("ore_class") }}</p>
           </div>
 
           <div class="grid gap-2">
             <label class="text-sm font-medium">Ni Expect</label>
             <Input v-model="local.grade_expect" type="number" step="any" placeholder="0.00" :disabled="!canMutate" />
+            <p v-if="fieldError('grade_expect')" class="text-sm text-destructive">{{ fieldError("grade_expect") }}</p>
           </div>
-
           <div class="grid gap-2">
             <label class="text-sm font-medium">Grade Control</label>
             <Select v-model="local.grade_control" :disabled="gradeControlLoading || !canMutate">
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="gradeControlLoading ? 'Loading...' : 'Select Grade Control'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onGradeControlScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="gradeControlSearch"
-                      placeholder="Search Grade Control..."
-                      class="h-8"
-                      @input="onGradeControlSearch(gradeControlSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="gradeControlSearch" placeholder="Search Grade Control..." class="h-8"
+                      @input="onGradeControlSearch(gradeControlSearch)" @keydown.stop @click.stop />
                   </div>
 
-                  <div class="max-h-72 overflow-y-auto" @scroll="onGradeControlScroll">
-                    <SelectItem v-for="o in gradeControlOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in gradeControlOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p v-if="fieldError('grade_control')" class="text-sm text-destructive">
+              {{ fieldError("grade_control") }}
+            </p>
           </div>
-
           <div class="grid gap-2">
             <label class="text-sm font-medium">Dome / Pile</label>
             <Select v-model="local.id_pile" :disabled="pileLoading || !canMutate">
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="pileLoading ? 'Loading...' : 'Select Dome / Pile'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onPileScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="pileSearch"
-                      placeholder="Search Dome / Pile..."
-                      class="h-8"
-                      @input="onPileSearch(pileSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="pileSearch" placeholder="Search Dome / Pile..." class="h-8"
+                      @input="onPileSearch(pileSearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onPileScroll">
-                    <SelectItem v-for="o in pileOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in pileOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p v-if="fieldError('id_pile')" class="text-sm text-destructive">
+              {{ fieldError("id_pile") }}
+            </p>
           </div>
+
 
           <div class="grid gap-2">
             <label class="text-sm font-medium">Batch Code</label>
             <Input v-model="local.batch_code" placeholder="Batch Code" :disabled="!canMutate" />
+
           </div>
 
           <div class="grid gap-2">
             <label class="text-sm font-medium">Increment</label>
             <Input v-model="local.increment" type="number" placeholder="0" :disabled="!canMutate" />
+            <p v-if="fieldError('increment')" class="text-sm text-destructive">{{ fieldError("increment") }}</p>
           </div>
-
           <div class="grid gap-2">
             <label class="text-sm font-medium">Batch Status</label>
             <Select v-model="local.batch_status" :disabled="!canMutate">
@@ -1463,6 +1367,7 @@ watch(
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p v-if="fieldError('batch_status')" class="text-sm text-destructive">{{ fieldError("batch_status") }}</p>
           </div>
 
           <div class="grid gap-2">
@@ -1479,37 +1384,9 @@ watch(
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p v-if="fieldError('status_dome')" class="text-sm text-destructive">{{ fieldError("status_dome") }}</p>
           </div>
 
-          <div class="grid gap-2">
-            <label class="text-sm font-medium">Sample Type</label>
-            <Select v-model="local.sample_type" :disabled="sampleTypeLoading || !canMutate">
-              <SelectTrigger class="h-9">
-                <SelectValue :placeholder="sampleTypeLoading ? 'Loading...' : 'Select Sample Type'" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectGroup>
-                  <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="sampleTypeSearch"
-                      placeholder="Search Sample Type..."
-                      class="h-8"
-                      @input="onSampleTypeSearch(sampleTypeSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
-                  </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onSampleTypeScroll">
-                    <SelectItem v-for="o in sampleTypeOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
 
           <div class="grid gap-2">
             <label class="text-sm font-medium">Truck Factor</label>
@@ -1517,49 +1394,45 @@ watch(
               <SelectTrigger class="h-9">
                 <SelectValue :placeholder="truckFactorLoading ? 'Loading...' : 'Select Truck Factor'" />
               </SelectTrigger>
-
-              <SelectContent>
+              <SelectContent class="max-h-80 overflow-auto" @scroll="onTruckFactorScroll">
                 <SelectGroup>
                   <div class="sticky top-0 z-10 bg-background/30 backdrop-blur p-2 border-b">
-                    <Input
-                      v-model="truckFactorSearch"
-                      placeholder="Search Truck Factor..."
-                      class="h-8"
-                      @input="onTruckFactorSearch(truckFactorSearch)"
-                      @keydown.stop
-                      @click.stop
-                    />
+                    <Input v-model="truckFactorSearch" placeholder="Search Truck Factor..." class="h-8"
+                      @input="onTruckFactorSearch(truckFactorSearch)" @keydown.stop @click.stop />
                   </div>
-
-                  <div class="max-h-72 overflow-y-auto" @scroll="onTruckFactorScroll">
-                    <SelectItem v-for="o in truckFactorOptions" :key="o.value" :value="o.value">
-                      {{ o.label }}
-                    </SelectItem>
-                  </div>
+                  <SelectItem v-for="o in truckFactorOptions" :key="o.value" :value="o.value">
+                    {{ o.label }}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p v-if="fieldError('truck_factor')" class="text-sm text-destructive">{{ fieldError("truck_factor") }}</p>
           </div>
-
           <div class="grid gap-2">
             <label class="text-sm font-medium">Ritase</label>
             <Input v-model="local.ritase" type="number" step="any" placeholder="0" :disabled="!canMutate" />
+            <p v-if="fieldError('ritase')" class="text-sm text-destructive">{{ fieldError("ritase") }}</p>
           </div>
 
           <div class="grid gap-2">
             <label class="text-sm font-medium">Tonnage</label>
             <Input v-model="local.tonnage" type="number" step="any" placeholder="0" disabled />
+            <p v-if="fieldError('tonnage')" class="text-sm text-destructive">
+              {{ fieldError("tonnage") }}
+            </p>
           </div>
-
           <div class="grid gap-2">
             <label class="text-sm font-medium">Unit Truck</label>
             <Input v-model="local.unit_truck" placeholder="Unit Truck" :disabled="!canMutate" />
           </div>
+
         </div>
 
         <div class="flex items-center gap-3">
           <label class="text-sm font-medium">Direct</label>
+
           <input v-model="local.direct" type="checkbox" class="h-4 w-4" :disabled="!canMutate" />
+
           <span class="text-sm text-muted-foreground">
             {{ local.direct ? "Yes" : "No" }}
           </span>
@@ -1569,7 +1442,6 @@ watch(
           <label class="text-sm font-medium">Remarks</label>
           <Textarea v-model="local.remarks" placeholder="Enter remarks" :disabled="!canMutate" />
         </div>
-
         <p v-if="fieldError('batch_code')" class="text-sm text-destructive">{{ fieldError("batch_code") }}</p>
         <p v-if="fieldError('non_field_errors')" class="text-sm text-destructive">
           {{ fieldError("non_field_errors") }}
@@ -1581,23 +1453,19 @@ watch(
 
       <DialogFooter>
         <Button variant="outline" @click="close">Cancel</Button>
-        <Button
-          v-if="canMutate"
-          :disabled="
-            loading ||
-            !local.tgl_production ||
-            !local.shift ||
-            !local.id_prospect_area ||
-            !local.id_pit_dome ||
-            !local.id_block ||
-            !local.id_material ||
-            !local.id_pile ||
-            !local.ritase ||
-            !local.tonnage ||
-            (requiresIup && !local.iup)
-          "
-          @click="submit"
-        >
+        <Button v-if="canMutate" :disabled="loading ||
+          !local.tgl_production ||
+          !local.shift ||
+          !local.id_prospect_area ||
+          !local.id_pit_dome ||
+          !local.id_block ||
+          !local.id_material ||
+          !local.id_pile ||
+          // !local.batch_code ||
+          !local.ritase ||
+          !local.tonnage ||
+          (requiresIup && !local.iup)
+          " @click="submit">
           {{ loading ? "Saving..." : "Submit" }}
         </Button>
       </DialogFooter>
