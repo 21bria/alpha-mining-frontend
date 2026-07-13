@@ -48,20 +48,36 @@ const isScrollable = computed(() => {
   return !['weekly', 'yearly', 'all'].includes(props.filterType)
 })
 
+const BaseColumnsMarkers = defineAsyncComponent(() =>
+  import('@/components/ui/apex-chart/BaseColumns.vue')
+)
+
+const BaseLineColumnArea = defineAsyncComponent(() =>
+  import('@/components/ui/apex-chart/BaseColumns.vue')
+)
+
+const BaseAreaChart = defineAsyncComponent(() =>
+  import('@/components/ui/apex-chart/BaseAreaChart.vue')
+)
+
 const chartComponent = computed(() => {
   switch (props.filterType) {
     case 'daily':
-      return defineAsyncComponent(() => import('@/components/ui/apex-chart/BaseColumnsMarkers.vue'))
+      return BaseColumnsMarkers
+
     case 'weekly':
-      return defineAsyncComponent(() => import('@/components/ui/apex-chart/BaseLineColumnArea.vue'))
+      return BaseLineColumnArea
+
     case 'monthly':
-      return defineAsyncComponent(() => import('@/components/ui/apex-chart/BaseAreaChart.vue'))
+      return BaseAreaChart
+
     case 'range':
     case 'yearly':
     case 'all':
-      return defineAsyncComponent(() => import('@/components/ui/apex-chart/BaseLineColumnArea.vue'))
+      return BaseLineColumnArea
+
     default:
-      return defineAsyncComponent(() => import('@/components/ui/apex-chart/BaseAreaChart.vue'))
+      return BaseAreaChart
   }
 })
 
