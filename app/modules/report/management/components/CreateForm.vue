@@ -61,12 +61,21 @@ const emptyMiningRow = (sort = 1) => ({
 })
 
 const emptyMetricRow = (sort = 1) => ({
+  code: "", 
   source_module: "MANUAL",
   section: "SUMMARY",
   title: "",
   value: undefined as number | undefined,
   suffix: "",
   description: "",
+  sort_order: sort,
+})
+
+const emptyTargetRow = (sort = 1) => ({
+  code: "EWH",
+  title: "Effective Working Hours",
+  plan: undefined as number | undefined,
+  unit: "h",
   sort_order: sort,
 })
 
@@ -111,6 +120,7 @@ const form = reactive({
 
   mining_rows: [emptyMiningRow()],
   metrics: [emptyMetricRow()],
+  targets: [emptyTargetRow()],
   manpower_rows: [emptyManpowerRow()],
   documents: [emptyDocumentRow()],
 })
@@ -173,25 +183,6 @@ function toDateInput(date: Date) {
   return `${y}-${m}-${d}`
 }
 
-// function getIsoWeekDates(year: number, week: number) {
-//   const simple = new Date(year, 0, 1 + (week - 1) * 7)
-//   const day = simple.getDay()
-//   const isoWeekStart = simple
-
-//   if (day <= 4) {
-//     isoWeekStart.setDate(simple.getDate() - simple.getDay() + 1)
-//   } else {
-//     isoWeekStart.setDate(simple.getDate() + 8 - simple.getDay())
-//   }
-
-//   const isoWeekEnd = new Date(isoWeekStart)
-//   isoWeekEnd.setDate(isoWeekStart.getDate() + 6)
-
-//   return {
-//     start: toDateInput(isoWeekStart),
-//     end: toDateInput(isoWeekEnd),
-//   }
-// }
 
 // maju 1 minggu dari ISO standard
 function getIsoWeekDates(year: number, week: number) {
@@ -350,6 +341,7 @@ async function loadDetail() {
 
       metrics: data.metrics?.length
         ? data.metrics.map((item: any, index: number) => ({
+          code: item.code || "", 
           source_module: item.source_module || "MANUAL",
           section: item.section || "SUMMARY",
           title: item.title || "",
@@ -359,6 +351,15 @@ async function loadDetail() {
           sort_order: item.sort_order || index + 1,
         }))
         : [emptyMetricRow()],
+
+      targets: data.targets?.length
+        ? data.targets.map((target: any) => ({
+            code: target.code || "",
+            title: target.title || "",
+            plan: Number(target.plan || 0),
+            unit: target.unit || "h",
+          }))
+        : [emptyTargetRow()],
 
       manpower_rows: data.manpower_rows?.length
         ? data.manpower_rows.map((row: any, index: number) => ({
@@ -476,6 +477,14 @@ function removeMiningRow(index: number) {
 
 function addMetric() {
   form.metrics.push(emptyMetricRow(form.metrics.length + 1))
+}
+
+function addTarget() {
+  form.targets.push(emptyTargetRow())
+}
+
+function removeTarget(index: number) {
+  form.targets.splice(index, 1)
 }
 
 function removeMetric(index: number) {
@@ -615,6 +624,12 @@ async function submit() {
     metrics: form.metrics
       .filter(item => item.title || item.value || item.description)
       .map((item, index) => ({
+        // code: String(item.code || "").trim().toUpperCase(),
+        code: String(item.title || "")
+          .trim()
+          .toUpperCase()
+          .replace(/\s+/g, "_"),   // <-- generate dari title
+          
         source_module: item.source_module || "MANUAL",
         section: item.section || "SUMMARY",
         title: item.title || "",
@@ -622,6 +637,19 @@ async function submit() {
         suffix: item.suffix || "",
         description: item.description || "",
         sort_order: item.sort_order || index + 1,
+      })),
+
+      targets: form.targets
+      .filter(target =>
+        target.code ||
+        target.title ||
+        target.plan,
+      )
+      .map(target => ({
+        code: String(target.code || "").trim().toUpperCase(),
+        title: target.title || "",
+        plan: target.plan ?? 0,
+        unit: target.unit || "",
       })),
 
     manpower_rows: form.manpower_rows
@@ -843,6 +871,7 @@ async function autoFillInventory() {
 
     const inventoryMetrics = [
       {
+        code: "INVENTORY",
         source_module: "AUTO",
         section: "INVENTORY",
         title: "Inventory",
@@ -852,6 +881,7 @@ async function autoFillInventory() {
         sort_order: 5,
       },
     ]
+
     form.metrics = [
       ...form.metrics.filter(item => item.section !== "INVENTORY"),
       ...inventoryMetrics,
@@ -1216,6 +1246,89 @@ async function uploadDocumentFiles(reportId: string) {
                 </Button>
               </CardContent>
             </Card>
+          </div>
+        </div>
+
+        <div class="rounded-xl border bg-background">
+          <div class="flex items-center justify-between border-b px-6 py-4">
+            <div>
+              <h2 class="text-xl font-semibold">
+                Performance Targets
+              </h2>
+
+              <p class="mt-1 text-sm text-muted-foreground">
+                Weekly or period targets used for actual versus plan comparison.
+              </p>
+            </div>
+
+            <Button size="sm" @click="addTarget">
+              <Plus class="mr-2 h-4 w-4" />
+              Add
+            </Button>
+          </div>
+
+          <div class="space-y-4 p-6">
+            <Card
+              v-for="(target, index) in form.targets"
+              :key="index"
+            >
+              <CardContent class="flex flex-wrap items-end gap-4 p-5">
+                <div class="w-[130px]">
+                  <Label>Code</Label>
+
+                  <Input
+                    v-model="target.code"
+                    placeholder="EWH"
+                  />
+                </div>
+
+                <div class="min-w-[240px] flex-1">
+                  <Label>Title</Label>
+
+                  <Input
+                    v-model="target.title"
+                    placeholder="Effective Working Hours"
+                  />
+                </div>
+
+                <div class="w-[160px]">
+                  <Label>Plan</Label>
+
+                  <Input
+                    v-model="target.plan"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div class="w-[110px]">
+                  <Label>Unit</Label>
+
+                  <Input
+                    v-model="target.unit"
+                    placeholder="h"
+                  />
+                </div>
+
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  class="h-10 w-10"
+                  @click="removeTarget(index)"
+                >
+                  <Trash2 class="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            <div
+              v-if="!form.targets.length"
+              class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
+            >
+              No performance targets
+            </div>
           </div>
         </div>
 

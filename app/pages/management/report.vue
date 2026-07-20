@@ -77,11 +77,79 @@ function formatCompact(value: number | string) {
   return formatNumber(num)
 }
 
-function mapTrend(status: string | null) {
-  if (status === "UP") return TrendingUp
-  if (status === "DOWN") return TrendingDown
-  return Minus
+type TrendStatus = "UP" | "DOWN" | "STABLE" | "NEUTRAL"
+
+function normalizeTrendStatus(
+  status?: string | null,
+): TrendStatus {
+  const normalized = String(status || "")
+    .trim()
+    .toUpperCase()
+
+  if (normalized === "UP")
+    return "UP"
+
+  if (normalized === "DOWN")
+    return "DOWN"
+
+  if (
+    normalized === "STABLE"
+    || normalized === "FLAT"
+    || normalized === "SAME"
+  ) {
+    return "STABLE"
+  }
+
+  return "NEUTRAL"
 }
+
+function getTrendMeta(status?: string | null) {
+  const normalized = normalizeTrendStatus(status)
+
+  if (normalized === "UP") {
+    return {
+      status: "UP" as const,
+      icon: TrendingUp,
+      color: "text-emerald-600 dark:text-emerald-400",
+      iconContainerClass:
+        "border-emerald-500/30 bg-emerald-500/10",
+    }
+  }
+
+  if (normalized === "DOWN") {
+    return {
+      status: "DOWN" as const,
+      icon: TrendingDown,
+      color: "text-red-600 dark:text-red-400",
+      iconContainerClass:
+        "border-red-500/30 bg-red-500/10",
+    }
+  }
+
+  if (normalized === "STABLE") {
+    return {
+      status: "STABLE" as const,
+      icon: Minus,
+      color: "text-sky-600 dark:text-sky-400",
+      iconContainerClass:
+        "border-sky-500/30 bg-sky-500/10",
+    }
+  }
+
+  return {
+    status: "NEUTRAL" as const,
+    icon: Minus,
+    color: "text-muted-foreground",
+    iconContainerClass:
+      "border-border bg-muted/40",
+  }
+}
+
+function mapTrend(status?: string | null) {
+  return getTrendMeta(status).icon
+}
+
+
 
 function sortByOrder(rows: any[]) {
   return [...rows].sort(
@@ -110,9 +178,9 @@ function buildManagementReportQuery() {
 }
 
 function calcAchievement(plan: number, actual: number) {
-    if (!plan) return 0
+  if (!plan) return 0
 
-    return Math.round((actual / plan) * 100)
+  return Math.round((actual / plan) * 100)
 }
 
 function buildReportView(item: any) {
@@ -175,7 +243,7 @@ function buildReportView(item: any) {
     Number(item.total_movement || 0) ||
     productionActual + bargingActual
 
- 
+
   const productionAchievement =
     calcAchievement(productionPlan, productionActual)
 
@@ -188,13 +256,28 @@ function buildReportView(item: any) {
       totalMovement,
     )
 
+  const movementTrend = getPlanTrend(
+    totalMovementPlan,
+    totalMovement,
+  )
+
+  const productionTrend = getPlanTrend(
+    productionPlan,
+    productionActual,
+  )
+
+  const bargingTrend = getPlanTrend(
+    bargingPlan,
+    bargingActual,
+  )
+
   const inventoryValue =
     Number(item.total_inventory || 0) ||
     Number(inventoryMetric?.value || 0)
 
   const inventoryDesc =
     Number(item.stockpile_count || 0) > 0 ||
-    Number(item.avg_ni || 0) > 0
+      Number(item.avg_ni || 0) > 0
       ? `${Number(item.stockpile_count || 0)} Stockpiles • Avg Ni ${Number(item.avg_ni || 0)}%`
       : inventoryMetric?.description || "No inventory data"
 
@@ -212,25 +295,27 @@ function buildReportView(item: any) {
       suffix: "%",
       title: "Total Movement",
       desc: `${formatCompact(totalMovement)} of ${formatCompact(totalMovementPlan)} Plan`,
-      icon: totalMovement > 0 ? TrendingUp : Minus,
-      color: totalMovement > 0 ? "text-emerald-500" : "text-muted-foreground",
+      icon: movementTrend.icon,
+      color: movementTrend.color,
+      iconContainerClass: movementTrend.iconContainerClass,
     },
     {
       value: formatK(productionActual),
       suffix: "K",
       title: "Production",
-      // desc: `Plan: ${formatCompact(productionPlan)} | Actual: ${formatCompact(productionActual)} (${periodLabel})`,
-      desc: `${formatCompact(productionAchievement)}% of ${formatCompact(productionPlan)} Plan (${periodLabel})`,
-      icon: productionActual > 0 ? TrendingUp : Minus,
-      color: productionActual > 0 ? "text-emerald-500" : "text-muted-foreground",
+      desc: `${formatPercent(productionAchievement)} of ${formatCompact(productionPlan)} Plan (${periodLabel})`,
+      icon: productionTrend.icon,
+      color: productionTrend.color,
+      iconContainerClass: productionTrend.iconContainerClass,
     },
     {
       value: formatK(bargingActual),
       suffix: "K",
       title: "Barging",
-      desc: `${formatCompact(bargingAchievement)}% of ${formatCompact(bargingPlan)} Plan(${periodLabel})`,
-      icon: bargingActual > 0 ? TrendingUp : Minus,
-      color: bargingActual > 0 ? "text-emerald-500" : "text-muted-foreground",
+      desc: `${formatPercent(bargingAchievement)} of ${formatCompact(bargingPlan)} Plan (${periodLabel})`,
+      icon: bargingTrend.icon,
+      color: bargingTrend.color,
+      iconContainerClass: bargingTrend.iconContainerClass,
     },
     {
       value: formatK(inventoryValue),
@@ -293,38 +378,132 @@ function buildReportView(item: any) {
     ...grandTotalMapped,
   ]
 
+
   fleetCards.value = metrics
-    .filter((m: any) =>
-      ["HSE", "FLEET", "OTHER"].includes(m.section),
+    .filter((metric: any) =>
+      ["HSE", "FLEET", "OTHER"].includes(metric.section),
     )
-    .map((m: any) => {
-      const value = Number(m.value || 0)
-      const isHse = m.section === "HSE"
+    .map((metric: any) => {
+      const value = Number(metric.value || 0)
+      const plan = Number(metric.plan || 0)
+      const achievement = Number(metric.achievement || 0)
+
+      const isHse = metric.section === "HSE"
+      const hasPlan = plan > 0
+
+      if (isHse) {
+        const hasIncident = value > 0
+
+        return {
+          value,
+          suffix: metric.suffix || "",
+          title: metric.title || "-",
+          desc: metric.description || "",
+
+          hasPlan: false,
+          plan: 0,
+          achievement: 0,
+          unit: "",
+
+          status: hasIncident ? "DOWN" : "UP",
+          icon: hasIncident ? AlertTriangle : ShieldCheck,
+          color: hasIncident
+            ? "text-red-500"
+            : "text-emerald-500",
+          iconContainerClass: hasIncident
+            ? "border-red-500/30 bg-red-500/10"
+            : "border-emerald-500/30 bg-emerald-500/10",
+
+          previousValue: 0,
+          changeValue: 0,
+          changePercent: 0,
+          comparisonLabel: "",
+        }
+      }
+
+      if (hasPlan) {
+        const planTrend = getPlanTrend(plan, value)
+
+        return {
+          value,
+          suffix: metric.unit || metric.suffix || "",
+          title: metric.title || "-",
+          desc: metric.description || "",
+
+          hasPlan: true,
+          plan,
+          achievement,
+          unit: metric.unit || metric.suffix || "",
+
+          status: planTrend.status,
+          icon: planTrend.icon,
+          color: planTrend.color,
+          iconContainerClass: planTrend.iconContainerClass,
+
+          previousValue: 0,
+          changeValue: value - plan,
+          changePercent: achievement,
+          comparisonLabel: "",
+        }
+      }
+
+      const trend = getTrendMeta(metric.status)
 
       return {
         value,
-        suffix: m.suffix || "",
-        title: m.title || "-",
-        desc: m.description || "",
-        icon: isHse
-          ? value > 0
-            ? AlertTriangle
-            : ShieldCheck
-          : value > 0
-            ? TrendingUp
-            : Minus,
-        color: isHse
-          ? value > 0
-            ? "text-red-500"
-            : "text-emerald-500"
-          : value > 0
-            ? "text-emerald-500"
-            : "text-muted-foreground",
+        suffix: metric.suffix || "",
+        title: metric.title || "-",
+        desc: metric.description || "",
+
+        hasPlan: false,
+        plan: 0,
+        achievement: 0,
+        unit: "",
+
+        status: trend.status,
+        icon: trend.icon,
+        color: trend.color,
+        iconContainerClass: trend.iconContainerClass,
+
+        previousValue: Number(metric.previous_value || 0),
+        changeValue: Number(metric.change_value || 0),
+        changePercent: Number(metric.change_percent || 0),
+        comparisonLabel: metric.comparison_label || "",
       }
     })
 
+  // manpowerRows.value = sortByOrder(item.manpower_rows || [])
   manpowerRows.value = sortByOrder(item.manpower_rows || [])
+    .map((row: any) => {
+      const trend = getTrendMeta(row.status)
 
+      const personnel = Number(row.personnel || 0)
+      const previousPersonnel = Number(row.previous_personnel || 0)
+      const changeValue = Number(row.change_value || 0)
+      const changePercent = Number(row.change_percent || 0)
+
+      return {
+        ...row,
+
+        personnel,
+        previousPersonnel,
+        changeValue,
+        changePercent,
+
+        comparisonLabel:
+          row.comparison_label
+          || (
+            previousPersonnel > 0
+              ? `vs ${formatNumber(previousPersonnel)}`
+              : ""
+          ),
+
+        trendStatus: trend.status,
+        trendIcon: trend.icon,
+        trendColor: trend.color,
+        trendContainerClass: trend.iconContainerClass,
+      }
+    })
   documents.value = sortByOrder(item.documents || []).map((doc: any, index: number) => ({
     title: doc.title || "Document",
     date: doc.document_date || "-",
@@ -340,19 +519,13 @@ async function loadReport() {
   isLoading.value = true
 
   try {
-    // const res: any = await request("/api/analytics/management-report/", {
-    //   method: "GET",
-    //   query: buildManagementReportQuery(),
-    // })
-
-    // const item = res?.results?.[0] || null
     const res: any = await request("/api/analytics/management-report/view/", {
-        method: "GET",
-        query: buildManagementReportQuery(),
-      })
+      method: "GET",
+      query: buildManagementReportQuery(),
+    })
 
     const item = res?.data || null
-    
+
     if (!item) {
       resetData()
       notify.info("No management report found")
@@ -372,6 +545,35 @@ function toggleDocument(index: number) {
   const doc = documents.value[index]
   if (!doc) return
   doc.open = !doc.open
+}
+
+function getPlanTrend(plan: number, actual: number) {
+  if (plan <= 0) {
+    return {
+      status: "NEUTRAL",
+      icon: Minus,
+      color: "text-muted-foreground",
+      iconContainerClass: "border-muted bg-muted/40",
+    }
+  }
+
+  if (actual >= plan) {
+    return {
+      status: "UP",
+      icon: TrendingUp,
+      color: "text-emerald-500",
+      iconContainerClass:
+        "border-emerald-500/20 bg-emerald-500/10",
+    }
+  }
+
+  return {
+    status: "DOWN",
+    icon: TrendingDown,
+    color: "text-red-500",
+    iconContainerClass:
+      "border-red-500/20 bg-red-500/10",
+  }
 }
 
 const defaultSummaryCards = [
@@ -434,10 +636,10 @@ watch(
 <template>
   <div class="relative min-h-[calc(100vh-56px)] w-full overflow-hidden px-6 lg:px-6">
     <div class="flex flex-wrap items-center justify-between gap-2">
-     <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
-      Operations Scorecard
-      <span class="text-xl">👋</span>
-    </h2>
+      <h2 class="flex items-center gap-2 text-2xl font-normal tracking-tight">
+        Operations Scorecard
+        <span class="text-xl">👋</span>
+      </h2>
     </div>
 
     <main class="@container/main mt-5 flex flex-1 flex-col gap-4 md:gap-6">
@@ -447,22 +649,24 @@ watch(
 
       <!-- SUMMARY CARDS -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <Card v-for="card in summaryCards.length ? summaryCards : defaultSummaryCards" :key="card.title" class="overflow-hidden" >
+        <Card v-for="card in summaryCards.length ? summaryCards : defaultSummaryCards" :key="card.title"
+          class="overflow-hidden">
           <CardHeader class="gap-1 px-5 py-0.2">
             <div class="flex items-center justify-between">
               <CardDescription class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {{ card.title }}
               </CardDescription>
 
-              <div
-                class="flex h-9 w-9 items-center justify-center rounded-full border"
-                :class="[
+              <div class="flex h-9 w-9 items-center justify-center rounded-full border" :class="card.iconContainerClass ||
+                (
                   card.color?.includes('red')
                     ? 'border-red-500/20 bg-red-500/10'
-                    : 'border-emerald-500/20 bg-emerald-500/10',
-                ]"
-              >
-              <component :is="card.icon || Minus" class="h-4 w-4":class="card.color || 'text-muted-foreground'"/>
+                    : card.color?.includes('emerald')
+                      ? 'border-emerald-500/20 bg-emerald-500/10'
+                      : 'border-muted bg-muted/40'
+                )
+                ">
+                <component :is="card.icon || Minus" class="h-4 w-4" :class="card.color || 'text-muted-foreground'" />
               </div>
             </div>
 
@@ -515,11 +719,8 @@ watch(
               </thead>
 
               <tbody>
-                <tr
-                  v-for="(row, index) in miningRows"
-                  :key="row.material"
-                  class="border-b transition-colors hover:bg-muted/30"
-                  :class="[
+                <tr v-for="(row, index) in miningRows" :key="row.material"
+                  class="border-b transition-colors hover:bg-muted/30" :class="[
                     row.isGrandTotal
                       ? 'bg-primary/10 font-bold'
                       : row.isTotal
@@ -529,21 +730,17 @@ watch(
                           : index % 2 === 0
                             ? 'bg-background'
                             : 'bg-muted/10',
-                  ]"
-                >
+                  ]">
                   <!-- MATERIAL -->
                   <td class="whitespace-nowrap px-5 py-2">
                     <div class="flex items-center gap-3">
-                      <div
-                        class="h-2.5 w-2.5 rounded-full"
-                        :class="[
-                          row.trendStatus === 'UP'
-                            ? 'bg-emerald-500'
-                            : row.trendStatus === 'DOWN'
-                              ? 'bg-red-500'
-                              : 'bg-muted-foreground',
-                        ]"
-                      />
+                      <div class="h-2.5 w-2.5 rounded-full" :class="[
+                        row.trendStatus === 'UP'
+                          ? 'bg-emerald-500'
+                          : row.trendStatus === 'DOWN'
+                            ? 'bg-red-500'
+                            : 'bg-muted-foreground',
+                      ]" />
 
                       <span>
                         {{ row.material }}
@@ -562,38 +759,30 @@ watch(
                   </td>
 
                   <!-- ACHIEVEMENT -->
-                  <td
-                    class="whitespace-nowrap px-5 py-2 text-right font-semibold"
-                    :class="[
-                      row.achievement >= 100
-                        ? 'text-emerald-600'
-                        : row.achievement >= 70
-                          ? 'text-amber-600'
-                          : 'text-red-600',
-                    ]"
-                  >
-                   {{ formatPercent(row.achievement) }}
+                  <td class="whitespace-nowrap px-5 py-2 text-right font-semibold" :class="[
+                    row.achievement >= 100
+                      ? 'text-emerald-600'
+                      : row.achievement >= 70
+                        ? 'text-amber-600'
+                        : 'text-red-600',
+                  ]">
+                    {{ formatPercent(row.achievement) }}
                   </td>
 
                   <!-- TREND -->
                   <td class="px-5 py-2 text-center">
-                    <span
-                      class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
+                    <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
                       :class="[
                         row.trendStatus === 'UP'
                           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
                           : row.trendStatus === 'DOWN'
                             ? 'border-red-500/30 bg-red-500/10 text-red-700'
                             : 'border-muted bg-muted/40 text-muted-foreground',
-                      ]"
-                    >
-                      <component
-                        :is="row.trendIcon || Minus"
-                        class="h-3.5 w-3.5"
-                      />
+                      ]">
+                      <component :is="row.trendIcon || Minus" class="h-3.5 w-3.5" />
 
                       <span v-if="row.isTotal || row.isGrandTotal">
-                      {{ formatPercent(row.achievement) }}
+                        {{ formatPercent(row.achievement) }}
                       </span>
                     </span>
                   </td>
@@ -621,42 +810,107 @@ watch(
             </div>
 
             <div class="grid grid-cols-1 gap-4 p-5 md:grid-cols-3">
+         <div
+            v-for="card in fleetCards"
+            :key="card.title"
+              class="rounded-2xl border border-border/80 bg-background/50 px-5 py-6 text-center transition-all hover:border-primary/30 hover:shadow-lg"
+            >
+            <!-- Icon -->
+            <div class="mb-3 flex justify-center">
               <div
-                v-for="card in fleetCards"
-                :key="card.title"
-                class="rounded-2xl border border-border/80 bg-background/50 px-6 py-8 text-center transition-all hover:border-primary/30 hover:shadow-lg"
+                class="flex h-10 w-10 items-center justify-center rounded-full border"
+                :class="card.iconContainerClass || [
+                  card.color?.includes('red')
+                    ? 'border-red-500/20 bg-red-500/10'
+                    : 'border-emerald-500/20 bg-emerald-500/10',
+                ]"
               >
-                <div class="mb-3 flex justify-center">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full border"
-                    :class="[
-                      card.color?.includes('red')
-                        ? 'border-red-500/20 bg-red-500/10'
-                        : 'border-emerald-500/20 bg-emerald-500/10',
-                    ]"
-                  >
-                    <component
-                      :is="card.icon || TrendingUp"
-                      class="h-6 w-6"
-                      :class="card.color || 'text-emerald-500'"
-                    />
-                  </div>
-                </div>
+                <component
+                  :is="card.icon || TrendingUp"
+                  class="h-5 w-5"
+                  :class="card.color || 'text-emerald-500'"
+                />
+              </div>
+            </div>
 
-                <div class="text-2xl font-bold" :class="card.color || 'text-emerald-600'">
-                  <NumberFlow :value="card.value" />
-                  <span>{{ card.suffix }}</span>
-                </div>
-                <div class="mt-3 text-xl font-medium">
-                  {{ card.title }}
-                </div>
+            <!-- Value -->
+            <div
+              class="text-2xl font-bold leading-none tabular-nums"
+              :class="card.color || 'text-emerald-600'"
+            >
+              <NumberFlow :value="card.value" />
+              <span class="ml-0.5 text-lg">{{ card.suffix }}</span>
+            </div>
 
-                <div class="mt-2 text-sm text-muted-foreground">
-                  {{ card.desc }}
-                </div>
+            <!-- Comparison -->
+            <div
+              v-if="!card.hasPlan && card.comparisonLabel"
+              class="mt-0 text-xs leading-none"
+            >
+              <span
+                :class="[
+                  card.status === 'UP'
+                    ? 'font-semibold text-emerald-600'
+                    : card.status === 'DOWN'
+                      ? 'font-semibold text-red-600'
+                      : 'font-normal text-muted-foreground',
+                ]"
+              >
+                {{ card.changePercent > 0 ? "+" : "" }}{{ card.changePercent }}%
+              </span>
+
+              <span class="ml-1 text-muted-foreground">
+                {{ card.comparisonLabel }}
+              </span>
+            </div>
+
+              <!-- Title -->
+              <div class="mt-5 text-lg font-semibold">
+                {{ card.title }}
               </div>
 
-              <div v-if="!fleetCards.length"  class="col-span-full p-5 text-center text-muted-foreground" >
+              <!-- Description -->
+              <div class="mt-2 min-h-10 text-sm leading-5 text-muted-foreground">
+                {{ card.desc }}
+              </div>
+
+              <!-- Plan -->
+              <div
+                v-if="card.hasPlan"
+                class="mt-auto border-t border-border/60 pt-4 text-xs"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="text-muted-foreground">
+                    Plan
+                  </span>
+
+                  <span class="font-semibold tabular-nums text-foreground">
+                    {{ formatNumber(card.plan) }} {{ card.unit }}
+                  </span>
+                </div>
+
+                <div class="mt-0 flex items-center justify-between">
+                  <span class="text-muted-foreground">
+                    Achievement
+                  </span>
+
+                  <span
+                    class="font-semibold tabular-nums"
+                    :class="[
+                      card.status === 'UP'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : card.status === 'DOWN'
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-muted-foreground',
+                    ]"
+                  >
+                    {{ Number(card.achievement || 0).toFixed(0) }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+              <div v-if="!fleetCards.length" class="col-span-full p-5 text-center text-muted-foreground">
                 No HSE/Fleet data
               </div>
             </div>
@@ -673,43 +927,44 @@ watch(
             </div>
 
             <div class="space-y-1 p-4 text-normal">
-             <div
-                v-for="row in manpowerRows"
-                :key="row.id || row.contractor"
-                class="flex items-center justify-between gap-3 border-b border-border/70 py-2 last:border-b-0"
-              >
-                <span
-                  :class="[
-                    row.description ? 'text-muted-foreground' : 'font-medium',
-                  ]"
-                >
-                  {{ row.contractor }}
-                </span>
+              <div v-for="row in manpowerRows" :key="row.id || row.contractor"
+                class="flex items-center justify-between gap-3 border-b border-border/70 py-2 last:border-b-0">
+                <div class="min-w-0">
+                  <div class="truncate font-medium text-foreground">
+                    {{ row.contractor }}
+                  </div>
 
-                <div class="flex items-center gap-2">
-                  <span class="font-medium text-foreground">
-                    {{ formatNumber(row.personnel || 0) }}
+                  <div v-if="row.description" class="mt-0.5 truncate text-xs text-muted-foreground">
+                    {{ row.description }}
+                  </div>
+                </div>
 
-                    <span
-                      v-if="row.description"
-                      class="ml-1 text-sm text-muted-foreground"
-                    >
-                      {{ row.description }}
-                    </span>
-                  </span>
+                <div class="flex shrink-0 items-center gap-2">
+                  <div class="text-right">
+                    <div class="font-medium tabular-nums text-foreground">
+                      {{ formatNumber(row.personnel) }}
+                    </div>
 
-                  <span
-                    class="inline-flex items-center rounded-full border px-2 py-0.5"
-                    :class="[
-                      Number(row.personnel || 0) > 0
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
-                        : 'border-red-500/30 bg-red-500/10 text-red-700',
-                    ]"
-                  >
-                    <component
-                      :is="Number(row.personnel || 0) > 0 ? TrendingUp : TrendingDown"
-                      class="h-3.5 w-3.5"
-                    />
+                    <div v-if="row.comparisonLabel" class="mt-0.5 text-[11px] leading-none">
+                      <span :class="[
+                        row.trendStatus === 'UP'
+                          ? 'font-semibold text-emerald-600'
+                          : row.trendStatus === 'DOWN'
+                            ? 'font-semibold text-red-600'
+                            : 'font-normal text-muted-foreground',
+                      ]">
+                        {{ Number(row.changePercent) > 0 ? "+" : "" }}{{ Math.round(Number(row.changePercent || 0)) }}%
+                      </span>
+
+                      <span class="ml-1 text-muted-foreground">
+                        {{ row.comparisonLabel }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border"
+                    :class="row.trendContainerClass">
+                    <component :is="row.trendIcon || Minus" class="h-4 w-4" :class="row.trendColor" />
                   </span>
                 </div>
               </div>
@@ -718,6 +973,7 @@ watch(
                 No manpower data
               </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -734,15 +990,14 @@ watch(
 
             <div class="divide-y divide-border/60">
               <div v-for="(doc, index) in documents" :key="doc.title" class="transition-colors hover:bg-muted/20">
-                <button type="button" class="flex w-full items-center justify-between px-6 py-4 text-left" @click="toggleDocument(index)">
+                <button type="button" class="flex w-full items-center justify-between px-6 py-4 text-left"
+                  @click="toggleDocument(index)">
                   <span class="text-lg font-semibold text-foreground">
                     {{ doc.title }}
                   </span>
 
-                  <ChevronDown
-                    class="h-5 w-5 text-primary transition-transform"
-                    :class="doc.open ? 'rotate-180' : ''"
-                  />
+                  <ChevronDown class="h-5 w-5 text-primary transition-transform"
+                    :class="doc.open ? 'rotate-180' : ''" />
                 </button>
 
                 <div v-if="doc.open" class="px-6 pb-5">
@@ -764,7 +1019,8 @@ watch(
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger as-child>
-                          <Button variant="outline"size="icon" class="h-10 w-10" @click="doc.fileUrl && openFile(doc.fileUrl)" >
+                          <Button variant="outline" size="icon" class="h-10 w-10"
+                            @click="doc.fileUrl && openFile(doc.fileUrl)">
                             <ExternalLink class="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
@@ -778,7 +1034,7 @@ watch(
                 </div>
               </div>
 
-              <div v-if="!documents.length" class="p-5 text-center text-muted-foreground" >
+              <div v-if="!documents.length" class="p-5 text-center text-muted-foreground">
                 No documents
               </div>
             </div>
