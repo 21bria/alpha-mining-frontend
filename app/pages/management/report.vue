@@ -327,22 +327,52 @@ function buildReportView(item: any) {
     },
   ]
 
+  // function mapMiningRow(row: any) {
+  //   return {
+  //     material: row.material,
+  //     group: row.group,
+  //     plan: Number(row.plan || 0),
+  //     actual: Number(row.actual || 0),
+  //     achievement: Number(row.achievement || 0),
+  //     trendIcon: mapTrend(row.status),
+  //     trendStatus: row.status,
+  //     bold: row.is_total || row.is_grand_total,
+  //     isTotal: row.is_total,
+  //     isGrandTotal: row.is_grand_total,
+  //     sourceModule: row.source_module,
+  //   }
+  // }
   function mapMiningRow(row: any) {
+    const plan = Number(row.plan || 0)
+    const actual = Number(row.actual || 0)
+
+    const achievement =
+      plan > 0
+        ? calcAchievement(plan, actual)
+        : Number(row.achievement || 0)
+
+    const trend = getPlanTrend(plan, actual)
+
     return {
       material: row.material,
       group: row.group,
-      plan: Number(row.plan || 0),
-      actual: Number(row.actual || 0),
-      achievement: Number(row.achievement || 0),
-      trendIcon: mapTrend(row.status),
-      trendStatus: row.status,
+
+      plan,
+      actual,
+      achievement,
+
+      // Otomatis dari plan vs actual
+      trendStatus: trend.status,
+      trendIcon: trend.icon,
+      trendColor: trend.color,
+      trendContainerClass: trend.iconContainerClass,
+
       bold: row.is_total || row.is_grand_total,
-      isTotal: row.is_total,
-      isGrandTotal: row.is_grand_total,
+      isTotal: Boolean(row.is_total),
+      isGrandTotal: Boolean(row.is_grand_total),
       sourceModule: row.source_module,
     }
   }
-
   const productionRowsMapped = rawMiningRows
     .filter((row: any) =>
       ["ORE", "WASTE"].includes(row.group) &&
@@ -713,7 +743,7 @@ watch(
                     Achievement
                   </th>
                   <th class="px-5 py-2 text-center font-semibold">
-                    Trend
+                    Status
                   </th>
                 </tr>
               </thead>
@@ -771,7 +801,7 @@ watch(
 
                   <!-- TREND -->
                   <td class="px-5 py-2 text-center">
-                    <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
+                    <!-- <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
                       :class="[
                         row.trendStatus === 'UP'
                           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
@@ -784,7 +814,26 @@ watch(
                       <span v-if="row.isTotal || row.isGrandTotal">
                         {{ formatPercent(row.achievement) }}
                       </span>
-                    </span>
+                    </span> -->
+                    <span
+                        class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
+                        :class="[
+                          row.trendStatus === 'UP'
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
+                            : row.trendStatus === 'DOWN'
+                              ? 'border-red-500/30 bg-red-500/10 text-red-700'
+                              : 'border-muted bg-muted/40 text-muted-foreground',
+                        ]"
+                      >
+                        <component
+                          :is="row.trendIcon || Minus"
+                          class="h-3.5 w-3.5"
+                        />
+
+                        <span v-if="row.isTotal || row.isGrandTotal">
+                          {{ formatPercent(row.achievement) }}
+                        </span>
+                      </span>
                   </td>
                 </tr>
 
